@@ -22,11 +22,24 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Make Gradle Wrapper Executable
-        run: chmod +x gradlew
+      - name: Prepare Gradle command
+        shell: bash
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            echo "GRADLE_CMD=./gradlew" >> "$GITHUB_ENV"
+          else
+            echo "GRADLE_CMD=gradle" >> "$GITHUB_ENV"
+          fi
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        shell: bash
+        run: |
+          if [ "$GRADLE_CMD" = "./gradlew" ]; then
+            ./gradlew assembleDebug
+          else
+            gradle assembleDebug
+          fi
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
