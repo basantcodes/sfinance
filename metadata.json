@@ -1,0 +1,8 @@
+{
+  "name": "Sfinance",
+  "description": "Personal finance and journal app with dual AD/BS Bikram Sambat calendar, Room DB, accounts, loans, budgets, and wishlist.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

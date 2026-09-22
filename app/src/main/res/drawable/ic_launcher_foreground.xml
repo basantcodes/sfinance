@@ -1,0 +1,35 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Journal & Ledger Book Base -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,26 C30.7,26 28,28.7 28,32 L28,78 C28,81.3 30.7,84 34,84 L74,84 C77.3,84 80,81.3 80,78 L80,32 C80,28.7 77.3,26 74,26 L34,26 Z" />
+    <!-- Journal Spine & Accent Cover -->
+    <path
+        android:fillColor="#047857"
+        android:pathData="M28,32 C28,28.7 30.7,26 34,26 L38,26 L38,84 L34,84 C30.7,84 28,81.3 28,78 Z" />
+    <!-- Golden Ribbon Bookmark -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M44,26 L52,26 L52,48 L48,44 L44,48 Z" />
+    <!-- Financial Growth Trend / Bar Lines on Journal -->
+    <path
+        android:fillColor="#059669"
+        android:pathData="M56,70 L60,70 L60,54 L56,54 Z" />
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M63,70 L67,70 L67,46 L63,46 Z" />
+    <path
+        android:fillColor="#34D399"
+        android:pathData="M70,70 L74,70 L74,38 L70,38 Z" />
+    <!-- Rupee / Currency / Ledger decorative horizontal lines -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M44,56 L52,56 L52,58 L44,58 Z" />
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M44,64 L52,64 L52,66 L44,66 Z" />
+</vector>

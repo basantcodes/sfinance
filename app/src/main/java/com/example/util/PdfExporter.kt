@@ -1,0 +1,146 @@
+package com.example.util
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.pdf.PdfDocument
+import com.example.data.local.entities.Account
+import com.example.data.local.entities.Category
+import com.example.data.local.entities.TransactionEntity
+import com.example.data.nepali.NepaliDateConverter
+import com.example.data.repository.DashboardData
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+object PdfExporter {
+
+    fun generateStatementPdf(
+        context: Context,
+        dashboardData: DashboardData,
+        transactions: List<TransactionEntity>,
+        accounts: List<Account>,
+        categories: Map<String, Category>,
+        currency: String
+    ): File {
+        val document = PdfDocument()
+        val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create() // Standard A4 points
+        val page = document.startPage(pageInfo)
+        val canvas: Canvas = page.canvas
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#047857")
+            textSize = 20f
+            isFakeBoldText = true
+        }
+        val headerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#0f172a")
+            textSize = 14f
+            isFakeBoldText = true
+        }
+        val subheaderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#64748b")
+            textSize = 10f
+        }
+        val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#334155")
+            textSize = 10f
+        }
+        val boldBodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#1e293b")
+            textSize = 10f
+            isFakeBoldText = true
+        }
+        val linePaint = Paint().apply {
+            color = Color.parseColor("#e2e8f0")
+            strokeWidth = 1f
+        }
+
+        var y = 45f
+
+        // Top Banner / Title
+        canvas.drawText("Sfinance", 40f, y, titlePaint)
+        y += 18f
+        val now = System.currentTimeMillis()
+        val dualDateStr = NepaliDateConverter.formatDualDate(now)
+        canvas.drawText("Generated Statement • $dualDateStr", 40f, y, subheaderPaint)
+        y += 20f
+        canvas.drawLine(40f, y, 555f, y, linePaint)
+        y += 24f
+
+        // Summary Card Box
+        paint.color = Color.parseColor("#f8fafc")
+        canvas.drawRoundRect(40f, y, 555f, y + 80f, 8f, 8f, paint)
+
+        canvas.drawText("Financial Overview ($currency)", 55f, y + 22f, headerPaint)
+        canvas.drawText("Net Worth: $currency ${String.format(Locale.US, "%.2f", dashboardData.netWorth)}", 55f, y + 42f, boldBodyPaint)
+        canvas.drawText("Bank: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalBank)}", 55f, y + 60f, bodyPaint)
+        canvas.drawText("Cash & Wallet: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalCash + dashboardData.totalWallet)}", 220f, y + 42f, bodyPaint)
+        canvas.drawText("Investments: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalInvestments)}", 220f, y + 60f, bodyPaint)
+        canvas.drawText("Total Lent: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalLent)}", 400f, y + 42f, bodyPaint)
+        canvas.drawText("Total Borrowed: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalBorrowed)}", 400f, y + 60f, bodyPaint)
+
+        y += 105f
+
+        // Transactions Table Header
+        canvas.drawText("Recent Transactions", 40f, y, headerPaint)
+        y += 14f
+
+        paint.color = Color.parseColor("#f1f5f9")
+        canvas.drawRect(40f, y, 555f, y + 20f, paint)
+        canvas.drawText("Date (AD / BS)", 45f, y + 14f, boldBodyPaint)
+        canvas.drawText("Type", 185f, y + 14f, boldBodyPaint)
+        canvas.drawText("Description", 250f, y + 14f, boldBodyPaint)
+        canvas.drawText("Category", 390f, y + 14f, boldBodyPaint)
+        canvas.drawText("Amount", 485f, y + 14f, boldBodyPaint)
+        y += 22f
+
+        val accountMap = accounts.associateBy { it.id }
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+
+        val txnsToPrint = transactions.take(24) // Fit cleanly on single page
+        for (txn in txnsToPrint) {
+            val dateStr = "${dateFormat.format(Date(txn.date))} (${txn.dateBs})"
+            val typeStr = txn.type
+            val desc = (txn.name ?: "Transaction").take(22)
+            val catStr = (categories[txn.categoryId]?.name ?: "-").take(16)
+            val amountStr = "$currency ${String.format(Locale.US, "%.2f", txn.amount)}"
+
+            canvas.drawText(dateStr, 45f, y + 13f, bodyPaint)
+
+            // Color coding for amount
+            val amtPaint = Paint(boldBodyPaint)
+            when (txn.type) {
+                "INCOME" -> amtPaint.color = Color.parseColor("#059669")
+                "EXPENSE" -> amtPaint.color = Color.parseColor("#ef4444")
+                "LEND" -> amtPaint.color = Color.parseColor("#d97706")
+                "BORROW" -> amtPaint.color = Color.parseColor("#9333ea")
+                else -> amtPaint.color = Color.parseColor("#3b82f6")
+            }
+
+            canvas.drawText(typeStr, 185f, y + 13f, bodyPaint)
+            canvas.drawText(desc, 250f, y + 13f, bodyPaint)
+            canvas.drawText(catStr, 390f, y + 13f, bodyPaint)
+            canvas.drawText(amountStr, 485f, y + 13f, amtPaint)
+
+            y += 20f
+            canvas.drawLine(40f, y, 555f, y, linePaint)
+        }
+
+        // Footer
+        canvas.drawText("Sfinance Android App • Dual AD/BS Offline Statement", 40f, 815f, subheaderPaint)
+
+        document.finishPage(page)
+
+        val outputFile = File(context.cacheDir, "finance_statement_${System.currentTimeMillis()}.pdf")
+        FileOutputStream(outputFile).use { out ->
+            document.writeTo(out)
+        }
+        document.close()
+        return outputFile
+    }
+}
