@@ -77,15 +77,6 @@ fun AuthScreen(
             ),
         contentAlignment = Alignment.Center
     ) {
-        val cardInteraction = remember { MutableInteractionSource() }
-        val isCardPressed by cardInteraction.collectIsPressedAsState()
-        val isCardHovered by cardInteraction.collectIsHoveredAsState()
-        val cardElevation = when {
-            isCardPressed -> 10.dp
-            isCardHovered -> 8.dp
-            else -> 6.dp
-        }
-
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -97,8 +88,7 @@ fun AuthScreen(
                 pressedElevation = 10.dp,
                 hoveredElevation = 8.dp,
                 focusedElevation = 8.dp
-            ),
-            interactionSource = cardInteraction
+            )
         ) {
             Column(
                 modifier = Modifier
