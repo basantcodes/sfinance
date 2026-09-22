@@ -139,8 +139,12 @@ fun DocsScreen(
                         reader.readText()
                     } ?: ""
                     if (content.isNotBlank()) {
-                        viewModel.importJson(content)
-                        Toast.makeText(context, "JSON backup imported successfully", Toast.LENGTH_SHORT).show()
+                        viewModel.importJson(content) { result ->
+                            result.fold(
+                                onSuccess = { count -> Toast.makeText(context, "Restored $count records for this user", Toast.LENGTH_SHORT).show() },
+                                onFailure = { error -> Toast.makeText(context, "Restore failed: ${error.message}", Toast.LENGTH_LONG).show() }
+                            )
+                        }
                     }
                 } catch (e: Exception) {
                     Toast.makeText(context, "Failed to read JSON file: ${e.message}", Toast.LENGTH_LONG).show()
@@ -207,6 +211,28 @@ fun DocsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = "Private, user-scoped backups",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = "Each JSON file has its own backup identity. Restore remaps accounts, categories, loans, transactions, wishlist items, and journal entries to the signed-in user without reusing another user's IDs.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+                    )
+                }
             }
         }
 
@@ -866,7 +892,12 @@ fun DocsScreen(
                 Button(
                     onClick = {
                         if (jsonImportText.isNotBlank()) {
-                            viewModel.importJson(jsonImportText)
+                            viewModel.importJson(jsonImportText) { result ->
+                                result.fold(
+                                    onSuccess = { count -> Toast.makeText(context, "Restored $count records for this user", Toast.LENGTH_SHORT).show() },
+                                    onFailure = { error -> Toast.makeText(context, "Restore failed: ${error.message}", Toast.LENGTH_LONG).show() }
+                                )
+                            }
                             showJsonImportDialog = false
                             jsonImportText = ""
                         }

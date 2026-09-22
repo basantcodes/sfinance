@@ -32,11 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.data.local.entities.Account
 import com.example.data.local.entities.AccountType
+import com.example.ui.components.FormFeedbackMessage
 
 @Composable
 fun AccountDialog(
@@ -65,6 +67,9 @@ fun AccountDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.fillMaxWidth(0.94f),
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 6.dp,
         title = {
             Text(
                 text = if (accountToEdit == null) "New Account" else "Edit Account",
@@ -158,7 +163,7 @@ fun AccountDialog(
                 )
 
                 errorMessage?.let {
-                    Text(text = it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    FormFeedbackMessage(message = it, isError = true)
                 }
             }
         },

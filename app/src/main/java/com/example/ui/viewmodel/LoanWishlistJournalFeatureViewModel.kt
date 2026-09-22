@@ -33,10 +33,10 @@ class LoanWishlistJournalFeatureViewModel(
         )
     }
 
-    suspend fun markLoanRepaid(loan: Loan, accountId: String?) {
-        val result = repository.markLoanRepaid(loan, accountId)
+    suspend fun markLoanRepaid(loan: Loan, accountId: String?, amount: Double) {
+        val result = repository.markLoanRepaid(loan, accountId, amount)
         result.fold(
-            onSuccess = { emitEvent("Loan with ${loan.counterparty} marked as repaid") },
+            onSuccess = { emitEvent("Payment recorded for ${loan.counterparty}") },
             onFailure = { err -> emitEvent(err.message ?: "Repayment failed") }
         )
     }

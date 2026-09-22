@@ -63,28 +63,34 @@ object PdfExporter {
         var y = 45f
 
         // Top Banner / Title
+        paint.color = Color.parseColor("#ECFDF5")
+        canvas.drawRoundRect(28f, 24f, 567f, 106f, 14f, 14f, paint)
+        paint.color = Color.parseColor("#10B981")
+        canvas.drawRoundRect(28f, 24f, 36f, 106f, 4f, 4f, paint)
         canvas.drawText("Sfinance", 40f, y, titlePaint)
         y += 18f
         val now = System.currentTimeMillis()
         val dualDateStr = NepaliDateConverter.formatDualDate(now)
         canvas.drawText("Generated Statement • $dualDateStr", 40f, y, subheaderPaint)
+        canvas.drawText("Offline financial snapshot", 425f, y, subheaderPaint)
         y += 20f
-        canvas.drawLine(40f, y, 555f, y, linePaint)
+        canvas.drawText("Accounts, balances, and recent activity", 40f, y, subheaderPaint)
         y += 24f
 
         // Summary Card Box
         paint.color = Color.parseColor("#f8fafc")
-        canvas.drawRoundRect(40f, y, 555f, y + 80f, 8f, 8f, paint)
+        canvas.drawRoundRect(40f, y, 555f, y + 88f, 10f, 10f, paint)
 
         canvas.drawText("Financial Overview ($currency)", 55f, y + 22f, headerPaint)
         canvas.drawText("Net Worth: $currency ${String.format(Locale.US, "%.2f", dashboardData.netWorth)}", 55f, y + 42f, boldBodyPaint)
         canvas.drawText("Bank: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalBank)}", 55f, y + 60f, bodyPaint)
         canvas.drawText("Cash & Wallet: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalCash + dashboardData.totalWallet)}", 220f, y + 42f, bodyPaint)
         canvas.drawText("Investments: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalInvestments)}", 220f, y + 60f, bodyPaint)
-        canvas.drawText("Total Lent: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalLent)}", 400f, y + 42f, bodyPaint)
-        canvas.drawText("Total Borrowed: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalBorrowed)}", 400f, y + 60f, bodyPaint)
+        canvas.drawText("Total Lent: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalLent)}", 390f, y + 42f, bodyPaint)
+        canvas.drawText("Total Borrowed: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalBorrowed)}", 390f, y + 60f, bodyPaint)
+        canvas.drawText("Transactions: ${transactions.size}", 390f, y + 78f, bodyPaint)
 
-        y += 105f
+        y += 113f
 
         // Transactions Table Header
         canvas.drawText("Recent Transactions", 40f, y, headerPaint)
@@ -103,7 +109,11 @@ object PdfExporter {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
         val txnsToPrint = transactions.take(24) // Fit cleanly on single page
-        for (txn in txnsToPrint) {
+        for ((index, txn) in txnsToPrint.withIndex()) {
+            if (index % 2 == 1) {
+                paint.color = Color.parseColor("#F8FAFC")
+                canvas.drawRect(40f, y, 555f, y + 20f, paint)
+            }
             val dateStr = "${dateFormat.format(Date(txn.date))} (${txn.dateBs})"
             val typeStr = txn.type
             val desc = (txn.name ?: "Transaction").take(22)
@@ -132,7 +142,9 @@ object PdfExporter {
         }
 
         // Footer
-        canvas.drawText("Sfinance Android App • Dual AD/BS Offline Statement", 40f, 815f, subheaderPaint)
+        canvas.drawLine(40f, 790f, 555f, 790f, linePaint)
+        canvas.drawText("Sfinance • Dual AD/BS Offline Statement", 40f, 815f, subheaderPaint)
+        canvas.drawText("Generated ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(now))}", 405f, 815f, subheaderPaint)
 
         document.finishPage(page)
 

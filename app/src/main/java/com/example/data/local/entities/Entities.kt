@@ -114,6 +114,8 @@ data class TransactionEntity(
     val accountToId: String? = null,
     val categoryId: String? = null,
     val loanId: String? = null,
+    val relatedTransactionId: String? = null,
+    val feeAmount: Double = 0.0,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
@@ -137,6 +139,7 @@ data class Loan(
     val interestMode: String = InterestMode.MANUAL.name, // AUTO, MANUAL
     val nextInterestDate: Long? = null,
     val interestFrequency: String? = InterestFrequency.MONTHLY.name, // MONTHLY, QUARTERLY, ANNUALLY
+    val remainingAmount: Double = principal,
     val status: String = LoanStatus.ACTIVE.name, // ACTIVE, REPAID, CLOSED
     val notes: String? = null,
     val createdAt: Long = System.currentTimeMillis(),

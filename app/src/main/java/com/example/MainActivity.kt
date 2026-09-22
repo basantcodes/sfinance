@@ -590,12 +590,12 @@ fun MainAppScaffold(
                 shellState.showAddTransactionDialog = false
                 shellState.transactionToEdit = null
             },
-            onSaveTransaction = { type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId ->
+            onSaveTransaction = { type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId, feeAmount ->
                 val old = shellState.transactionToEdit
                 if (old == null) {
-                    viewModel.createTransaction(type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId)
+                    viewModel.createTransaction(type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId, feeAmount)
                 } else {
-                    viewModel.updateTransaction(old, type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId)
+                    viewModel.updateTransaction(old, type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId, feeAmount)
                 }
                 shellState.showAddTransactionDialog = false
                 shellState.transactionToEdit = null

@@ -18,7 +18,8 @@ class TransactionFeatureViewModel(
         notes: String?,
         fromAccountId: String?,
         toAccountId: String?,
-        categoryId: String?
+        categoryId: String?,
+        feeAmount: Double = 0.0
     ) {
         val result = repository.createTransaction(
             userId = userId,
@@ -30,7 +31,8 @@ class TransactionFeatureViewModel(
             notes = notes,
             accountFromId = fromAccountId,
             accountToId = toAccountId,
-            categoryId = categoryId
+            categoryId = categoryId,
+            feeAmount = feeAmount
         )
         result.fold(
             onSuccess = { emitEvent("Transaction added successfully") },
@@ -48,7 +50,8 @@ class TransactionFeatureViewModel(
         newNotes: String?,
         newAccountFromId: String?,
         newAccountToId: String?,
-        newCategoryId: String?
+        newCategoryId: String?,
+        newFeeAmount: Double = 0.0
     ) {
         val result = repository.updateTransaction(
             oldTransaction,
@@ -60,7 +63,8 @@ class TransactionFeatureViewModel(
             newNotes,
             newAccountFromId,
             newAccountToId,
-            newCategoryId
+            newCategoryId,
+            newFeeAmount
         )
         result.fold(
             onSuccess = { emitEvent("Transaction updated") },

@@ -100,6 +100,9 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): TransactionEntity?
 
+    @Query("SELECT * FROM transactions WHERE relatedTransactionId = :transactionId LIMIT 1")
+    suspend fun getRelatedTransaction(transactionId: String): TransactionEntity?
+
     @Query("SELECT * FROM transactions WHERE accountFromId = :accountId OR accountToId = :accountId")
     suspend fun getByAccountId(accountId: String): List<TransactionEntity>
 

@@ -3,6 +3,7 @@ package com.example.ui.dialogs
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +31,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,6 +51,7 @@ import com.example.data.local.entities.TransactionEntity
 import com.example.data.local.entities.TransactionType
 import com.example.data.nepali.NepaliDateConverter
 import com.example.ui.components.NepaliDatePickerDialog
+import com.example.ui.components.FormFeedbackMessage
 
 @Composable
 fun TransactionDialog(
@@ -67,6 +70,7 @@ fun TransactionDialog(
         fromAccountId: String?,
         toAccountId: String?,
         categoryId: String?
+        ,feeAmount: Double
     ) -> Unit,
     onQuickCreateCategory: (name: String, type: CategoryType) -> Unit
 ) {
@@ -93,6 +97,7 @@ fun TransactionDialog(
     var amountStr by remember { mutableStateOf(transactionToEdit?.amount?.toString() ?: "") }
     var nameStr by remember { mutableStateOf(transactionToEdit?.name ?: "") }
     var notesStr by remember { mutableStateOf(transactionToEdit?.notes ?: "") }
+    var feeStr by remember { mutableStateOf(transactionToEdit?.feeAmount?.takeIf { it > 0 }?.toString() ?: "") }
 
     var selectedDateMillis by remember { mutableLongStateOf(transactionToEdit?.date ?: System.currentTimeMillis()) }
     var selectedDateBs by remember {
@@ -128,6 +133,9 @@ fun TransactionDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.fillMaxWidth(0.94f),
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 6.dp,
         title = {
             Text(
                 text = if (transactionToEdit == null) "New Transaction" else "Edit Transaction",
@@ -232,6 +240,19 @@ fun TransactionDialog(
                         )
                     }
                     TransactionType.TRANSFER -> {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("Balance transfer", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                Text(
+                                    "The destination receives the transfer amount. Any fee is charged separately to the source account.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                         AccountPicker(
                             label = "Source (From Account)*",
                             accounts = accounts,
@@ -244,6 +265,25 @@ fun TransactionDialog(
                             selectedId = selectedToAccountId,
                             onSelect = { selectedToAccountId = it }
                         )
+                        OutlinedTextField(
+                            value = feeStr,
+                            onValueChange = { feeStr = it },
+                            label = { Text("Transfer Fee ($currency, optional)") },
+                            supportingText = { Text("Paid by the source account") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        val previewAmount = amountStr.toDoubleOrNull() ?: 0.0
+                        val previewFee = feeStr.toDoubleOrNull() ?: 0.0
+                        if (previewAmount > 0 && previewFee >= 0) {
+                            Text(
+                                "Source account deducted: $currency ${String.format("%,.2f", previewAmount + previewFee)} | Destination receives: $currency ${String.format("%,.2f", previewAmount)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                     else -> Unit
                 }
@@ -277,11 +317,7 @@ fun TransactionDialog(
                 )
 
                 errorMessage?.let { msg ->
-                    Text(
-                        text = msg,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    FormFeedbackMessage(message = msg, isError = true)
                 }
             }
         },
@@ -291,6 +327,11 @@ fun TransactionDialog(
                     val amount = amountStr.toDoubleOrNull()
                     if (amount == null || amount <= 0) {
                         errorMessage = "Please enter a valid positive amount"
+                        return@Button
+                    }
+                    val fee = if (currentType == TransactionType.TRANSFER) feeStr.toDoubleOrNull() ?: 0.0 else 0.0
+                    if (!fee.isFinite() || fee < 0) {
+                        errorMessage = "Please enter a valid non-negative transfer fee"
                         return@Button
                     }
                     if (currentType == TransactionType.EXPENSE && selectedFromAccountId == null) {
@@ -310,6 +351,10 @@ fun TransactionDialog(
                             errorMessage = "Source and destination cannot be the same"
                             return@Button
                         }
+                        if (fee >= amount) {
+                            errorMessage = "Transfer fee should be smaller than the transfer amount"
+                            return@Button
+                        }
                     }
 
                     onSaveTransaction(
@@ -322,6 +367,7 @@ fun TransactionDialog(
                         if (currentType == TransactionType.EXPENSE || currentType == TransactionType.TRANSFER) selectedFromAccountId else null,
                         if (currentType == TransactionType.INCOME || currentType == TransactionType.TRANSFER) selectedToAccountId else null,
                         if (currentType != TransactionType.TRANSFER) selectedCategoryId else null
+                        ,fee
                     )
                 }
             ) {

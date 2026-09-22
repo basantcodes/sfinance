@@ -43,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +57,7 @@ import com.example.data.local.entities.LoanStatus
 import com.example.data.local.entities.LoanType
 import com.example.data.nepali.NepaliDateConverter
 import com.example.ui.components.EmptyStateCard
+import com.example.ui.components.FormFeedbackMessage
 import com.example.ui.components.TransactionTypeBadge
 import com.example.ui.components.formatAmount
 import com.example.ui.dialogs.AccountPicker
@@ -84,9 +86,12 @@ fun LoansScreen(
 
     var loanToRepay by remember { mutableStateOf<Loan?>(null) }
     var repayAccountId by remember { mutableStateOf(accounts.firstOrNull()?.id) }
+    var repaymentAmountStr by remember { mutableStateOf("") }
+    var repaymentError by remember { mutableStateOf<String?>(null) }
     var loanToDelete by remember { mutableStateOf<Loan?>(null) }
     var loanForInterest by remember { mutableStateOf<Loan?>(null) }
     var interestAmountStr by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -176,6 +181,8 @@ fun LoansScreen(
                         onMarkRepaid = {
                             loanToRepay = loan
                             repayAccountId = accounts.firstOrNull()?.id
+                            repaymentAmountStr = loan.remainingAmount.toString()
+                            repaymentError = null
                         },
                         onAddInterest = {
                             loanForInterest = loan
@@ -195,11 +202,27 @@ fun LoansScreen(
     loanToRepay?.let { loan ->
         AlertDialog(
             onDismissRequest = { loanToRepay = null },
-            title = { Text("Mark Loan as Repaid") },
+            title = { Text("Record Loan Payment") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        "Principal: ${formatAmount(loan.principal, currency)}\nCounterparty: ${loan.counterparty}\nType: ${loan.type}"
+                        "Remaining: ${formatAmount(loan.remainingAmount, currency)}\nCounterparty: ${loan.counterparty}\nType: ${loan.type}"
+                    )
+                    OutlinedTextField(
+                        value = repaymentAmountStr,
+                        onValueChange = {
+                            repaymentAmountStr = it
+                            repaymentError = null
+                        },
+                        label = { Text("Payment Amount ($currency)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        "You can pay or receive part of the balance. The loan stays active until the remaining amount reaches zero.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         if (loan.type == LoanType.LEND.name)
@@ -214,16 +237,31 @@ fun LoansScreen(
                         selectedId = repayAccountId,
                         onSelect = { repayAccountId = it }
                     )
+                    repaymentError?.let { FormFeedbackMessage(message = it, isError = true) }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.markLoanRepaid(loan, repayAccountId)
-                        loanToRepay = null
+                        val amount = repaymentAmountStr.toDoubleOrNull()
+                        when {
+                            amount == null || !amount.isFinite() || amount <= 0 -> {
+                                repaymentError = "Enter a positive payment amount"
+                            }
+                            amount > loan.remainingAmount + 0.0001 -> {
+                                repaymentError = "Payment cannot exceed the remaining balance"
+                            }
+                            repayAccountId == null -> {
+                                repaymentError = "Select a settlement account"
+                            }
+                            else -> {
+                                viewModel.markLoanRepaid(loan, repayAccountId, amount)
+                                loanToRepay = null
+                            }
+                        }
                     }
                 ) {
-                    Text("Confirm Repaid")
+                    Text("Record Payment")
                 }
             },
             dismissButton = {
@@ -257,7 +295,7 @@ fun LoansScreen(
                     onClick = {
                         val amt = interestAmountStr.toDoubleOrNull()
                         if (amt != null && amt > 0) {
-                            kotlinx.coroutines.GlobalScope.launch {
+                            coroutineScope.launch {
                                 viewModel.repository.addLoanInterest(loan.id, amt)
                                 viewModel.refreshAllData()
                             }

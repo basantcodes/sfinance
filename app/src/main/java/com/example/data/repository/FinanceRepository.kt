@@ -115,6 +115,11 @@ class FinanceRepository(
     // --- AUTH ---
     suspend fun register(name: String, email: String, passwordPlain: String): Result<User> {
         val trimmedEmail = email.trim().lowercase()
+        if (name.trim().length < 2) return Result.failure(Exception("Name must be at least 2 characters"))
+        if (!trimmedEmail.matches(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))) {
+            return Result.failure(Exception("Enter a valid email address"))
+        }
+        if (passwordPlain.length < 8) return Result.failure(Exception("Password must be at least 8 characters"))
         val existing = userDao.getByEmail(trimmedEmail)
         if (existing != null) {
             return Result.failure(Exception("User with this email already exists"))
@@ -145,6 +150,9 @@ class FinanceRepository(
 
     suspend fun login(email: String, passwordPlain: String): Result<User> {
         val trimmedEmail = email.trim().lowercase()
+        if (!trimmedEmail.matches(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) || passwordPlain.isBlank()) {
+            return Result.failure(Exception("Enter a valid email and password"))
+        }
         val user = userDao.getByEmail(trimmedEmail) ?: return Result.failure(Exception("Invalid email or password"))
         if (!BCrypt.checkpw(passwordPlain, user.password)) {
             return Result.failure(Exception("Invalid email or password"))
@@ -271,9 +279,13 @@ class FinanceRepository(
         accountFromId: String? = null,
         accountToId: String? = null,
         categoryId: String? = null,
-        loanId: String? = null
+        loanId: String? = null,
+        feeAmount: Double = 0.0
     ): Result<TransactionEntity> = runCatching {
         val allowNegative = runCatching { preferenceManager.allowNegativeBalanceFlow.first() }.getOrDefault(false)
+        require(amount.isFinite() && amount > 0) { "Transaction amount must be a positive number" }
+        require(feeAmount.isFinite() && feeAmount >= 0) { "Transfer fee cannot be negative" }
+        require(type == TransactionType.TRANSFER || feeAmount == 0.0) { "Fees are only supported for transfers" }
 
         database.withTransaction {
             when (type) {
@@ -294,8 +306,8 @@ class FinanceRepository(
                     require(accountFromId != accountToId) { "Cannot transfer to the same account" }
                     val fromAccount = requireNotNull(accountDao.getById(accountFromId)) { "Source account not found" }
                     val toAccount = requireNotNull(accountDao.getById(accountToId)) { "Destination account not found" }
-                    checkSufficientBalance(fromAccount, amount, allowNegative)
-                    accountDao.updateBalance(fromAccount.id, fromAccount.balance - amount)
+                    checkSufficientBalance(fromAccount, amount + feeAmount, allowNegative)
+                    accountDao.updateBalance(fromAccount.id, fromAccount.balance - amount - feeAmount)
                     accountDao.updateBalance(toAccount.id, toAccount.balance + amount)
                 }
                 TransactionType.LEND -> {
@@ -322,9 +334,26 @@ class FinanceRepository(
                 accountFromId = accountFromId,
                 accountToId = accountToId,
                 categoryId = categoryId,
-                loanId = loanId
+                loanId = loanId,
+                feeAmount = feeAmount
             )
             transactionDao.insert(transaction)
+
+            if (type == TransactionType.TRANSFER && feeAmount > 0.0) {
+                transactionDao.insert(
+                    TransactionEntity(
+                        userId = userId,
+                        type = TransactionType.EXPENSE.name,
+                        name = "Transfer fee",
+                        notes = "Fee for transfer ${transaction.id}",
+                        amount = feeAmount,
+                        date = date,
+                        dateBs = dateBs,
+                        accountFromId = accountFromId,
+                        relatedTransactionId = transaction.id
+                    )
+                )
+            }
             transaction
         }
     }
@@ -339,9 +368,13 @@ class FinanceRepository(
         newNotes: String?,
         newAccountFromId: String?,
         newAccountToId: String?,
-        newCategoryId: String?
+        newCategoryId: String?,
+        newFeeAmount: Double = 0.0
     ): Result<TransactionEntity> = runCatching {
         val allowNegative = runCatching { preferenceManager.allowNegativeBalanceFlow.first() }.getOrDefault(false)
+        require(newAmount.isFinite() && newAmount > 0) { "Transaction amount must be a positive number" }
+        require(newFeeAmount.isFinite() && newFeeAmount >= 0) { "Transfer fee cannot be negative" }
+        require(newType == TransactionType.TRANSFER || newFeeAmount == 0.0) { "Fees are only supported for transfers" }
 
         database.withTransaction {
             // Step 1: Reverse old change
@@ -359,14 +392,17 @@ class FinanceRepository(
                     }
                 }
                 TransactionType.TRANSFER -> {
+                    val oldLinkedFee = transactionDao.getRelatedTransaction(oldTransaction.id)
+                    val oldFeeAmount = oldTransaction.feeAmount.takeIf { it > 0.0 } ?: oldLinkedFee?.amount ?: 0.0
                     oldTransaction.accountFromId?.let { id ->
                         val acc = requireNotNull(accountDao.getById(id))
-                        accountDao.updateBalance(acc.id, acc.balance + oldTransaction.amount)
+                        accountDao.updateBalance(acc.id, acc.balance + oldTransaction.amount + oldFeeAmount)
                     }
                     oldTransaction.accountToId?.let { id ->
                         val acc = requireNotNull(accountDao.getById(id))
                         accountDao.updateBalance(acc.id, acc.balance - oldTransaction.amount)
                     }
+                    oldLinkedFee?.let { transactionDao.delete(it) }
                 }
                 TransactionType.LEND -> {
                     oldTransaction.accountFromId?.let { id ->
@@ -398,10 +434,11 @@ class FinanceRepository(
                 TransactionType.TRANSFER -> {
                     requireNotNull(newAccountFromId) { "Source account is required" }
                     requireNotNull(newAccountToId) { "Destination account is required" }
+                    require(newAccountFromId != newAccountToId) { "Cannot transfer to the same account" }
                     val fromAcc = requireNotNull(accountDao.getById(newAccountFromId))
                     val toAcc = requireNotNull(accountDao.getById(newAccountToId))
-                    checkSufficientBalance(fromAcc, newAmount, allowNegative)
-                    accountDao.updateBalance(fromAcc.id, fromAcc.balance - newAmount)
+                    checkSufficientBalance(fromAcc, newAmount + newFeeAmount, allowNegative)
+                    accountDao.updateBalance(fromAcc.id, fromAcc.balance - newAmount - newFeeAmount)
                     accountDao.updateBalance(toAcc.id, toAcc.balance + newAmount)
                 }
                 TransactionType.LEND -> {
@@ -427,9 +464,25 @@ class FinanceRepository(
                 accountFromId = newAccountFromId,
                 accountToId = newAccountToId,
                 categoryId = newCategoryId,
+                feeAmount = newFeeAmount,
                 updatedAt = System.currentTimeMillis()
             )
             transactionDao.update(updated)
+            if (newType == TransactionType.TRANSFER && newFeeAmount > 0.0) {
+                transactionDao.insert(
+                    TransactionEntity(
+                        userId = updated.userId,
+                        type = TransactionType.EXPENSE.name,
+                        name = "Transfer fee",
+                        notes = "Fee for transfer ${updated.id}",
+                        amount = newFeeAmount,
+                        date = newDate,
+                        dateBs = newDateBs,
+                        accountFromId = newAccountFromId,
+                        relatedTransactionId = updated.id
+                    )
+                )
+            }
             updated
         }
     }
@@ -448,12 +501,19 @@ class FinanceRepository(
                     }
                 }
                 TransactionType.EXPENSE -> {
+                    transaction.relatedTransactionId?.let { parentId ->
+                        transactionDao.getById(parentId)?.let { parent ->
+                            transactionDao.update(parent.copy(feeAmount = 0.0, updatedAt = System.currentTimeMillis()))
+                        }
+                    }
                     transaction.accountFromId?.let { id ->
                         val acc = requireNotNull(accountDao.getById(id))
                         accountDao.updateBalance(acc.id, acc.balance + transaction.amount)
                     }
                 }
                 TransactionType.TRANSFER -> {
+                    val linkedFee = transactionDao.getRelatedTransaction(transaction.id)
+                    val feeAmount = transaction.feeAmount.takeIf { it > 0.0 } ?: linkedFee?.amount ?: 0.0
                     transaction.accountToId?.let { id ->
                         val toAcc = requireNotNull(accountDao.getById(id))
                         checkSufficientBalance(toAcc, transaction.amount, allowNegative)
@@ -461,8 +521,9 @@ class FinanceRepository(
                     }
                     transaction.accountFromId?.let { id ->
                         val fromAcc = requireNotNull(accountDao.getById(id))
-                        accountDao.updateBalance(fromAcc.id, fromAcc.balance + transaction.amount)
+                        accountDao.updateBalance(fromAcc.id, fromAcc.balance + transaction.amount + feeAmount)
                     }
+                    linkedFee?.let { transactionDao.delete(it) }
                 }
                 TransactionType.LEND -> {
                     transaction.accountFromId?.let { id ->
@@ -560,6 +621,7 @@ class FinanceRepository(
                 interestMode = interestMode.name,
                 nextInterestDate = nextInterestDate,
                 interestFrequency = interestFrequency?.name,
+                remainingAmount = principal,
                 status = LoanStatus.ACTIVE.name,
                 notes = notes
             )
@@ -573,6 +635,7 @@ class FinanceRepository(
         amount: Double,
         date: Long = System.currentTimeMillis()
     ): LoanInterest {
+        require(amount.isFinite() && amount > 0) { "Interest amount must be positive" }
         val bsDate = NepaliDateConverter.adToBs(date).formatted
         val interest = LoanInterest(
             loanId = loanId,
@@ -580,34 +643,49 @@ class FinanceRepository(
             date = date,
             dateBs = bsDate
         )
-        loanInterestDao.insert(interest)
+        database.withTransaction {
+            loanInterestDao.insert(interest)
+            loanDao.getById(loanId)?.let { loan ->
+                loanDao.update(
+                    loan.copy(
+                        remainingAmount = loan.remainingAmount + amount,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
+            }
+        }
         return interest
     }
 
     suspend fun markLoanRepaid(
         loan: Loan,
         accountId: String?,
+        amount: Double,
         repayDate: Long = System.currentTimeMillis()
     ): Result<Unit> = runCatching {
         val allowNegative = preferenceManager.allowNegativeBalanceFlow.first()
+        require(amount.isFinite() && amount > 0) { "Payment amount must be positive" }
 
         database.withTransaction {
-            val interests = loanInterestDao.getByLoanId(loan.id)
-            val totalInterest = interests.sumOf { it.amount }
-            val totalRepayAmount = loan.principal + totalInterest
+            val currentLoan = requireNotNull(loanDao.getById(loan.id)) { "Loan not found" }
+            val outstanding = currentLoan.remainingAmount
+            require(outstanding > 0.0001) { "This loan has no remaining balance" }
+            require(amount <= outstanding + 0.0001) {
+                "Payment cannot exceed the remaining balance of ${String.format(Locale.US, "%.2f", outstanding)}"
+            }
             val bsDate = NepaliDateConverter.adToBs(repayDate).formatted
 
             if (!accountId.isNullOrEmpty()) {
                 val account = requireNotNull(accountDao.getById(accountId)) { "Account not found" }
                 if (loan.type == LoanType.LEND.name) {
                     // Repayment received -> INCOME transaction
-                    accountDao.updateBalance(account.id, account.balance + totalRepayAmount)
+                    accountDao.updateBalance(account.id, account.balance + amount)
                     val txn = TransactionEntity(
                         userId = loan.userId,
                         type = TransactionType.INCOME.name,
                         name = "Repayment from ${loan.counterparty}",
-                        notes = "Loan repaid (Principal: ${loan.principal}, Interest: $totalInterest)",
-                        amount = totalRepayAmount,
+                        notes = "Loan payment received; remaining balance: ${outstanding - amount}",
+                        amount = amount,
                         date = repayDate,
                         dateBs = bsDate,
                         accountToId = accountId,
@@ -616,14 +694,14 @@ class FinanceRepository(
                     transactionDao.insert(txn)
                 } else {
                     // Borrow repaid -> EXPENSE transaction
-                    checkSufficientBalance(account, totalRepayAmount, allowNegative)
-                    accountDao.updateBalance(account.id, account.balance - totalRepayAmount)
+                    checkSufficientBalance(account, amount, allowNegative)
+                    accountDao.updateBalance(account.id, account.balance - amount)
                     val txn = TransactionEntity(
                         userId = loan.userId,
                         type = TransactionType.EXPENSE.name,
                         name = "Repayment to ${loan.counterparty}",
-                        notes = "Borrow repaid (Principal: ${loan.principal}, Interest: $totalInterest)",
-                        amount = totalRepayAmount,
+                        notes = "Loan payment made; remaining balance: ${outstanding - amount}",
+                        amount = amount,
                         date = repayDate,
                         dateBs = bsDate,
                         accountFromId = accountId,
@@ -633,9 +711,11 @@ class FinanceRepository(
                 }
             }
 
+            val remaining = (outstanding - amount).coerceAtLeast(0.0)
             loanDao.update(
-                loan.copy(
-                    status = LoanStatus.REPAID.name,
+                currentLoan.copy(
+                    remainingAmount = remaining,
+                    status = if (remaining <= 0.0001) LoanStatus.REPAID.name else LoanStatus.ACTIVE.name,
                     updatedAt = System.currentTimeMillis()
                 )
             )
@@ -1031,19 +1111,26 @@ class FinanceRepository(
 
     // --- EXPORT & IMPORT (JSON & CSV) ---
     suspend fun exportFullJson(userId: String): String {
+        val user = userDao.getById(userId) ?: throw IllegalArgumentException("User not found")
         val accounts = accountDao.getAll(userId)
         val categories = categoryDao.getAll(userId)
         val transactions = transactionDao.getAll(userId)
         val loans = loanDao.getAll(userId)
-        val loanInterests = loanInterestDao.getAll()
+        val loanIds = loans.map { it.id }.toSet()
+        val loanInterests = loanInterestDao.getAll().filter { it.loanId in loanIds }
         val budgets = budgetDao.getAll(userId)
         val wishlist = wishlistDao.getAll(userId)
         val journal = journalDao.getAll(userId)
 
         val root = JSONObject()
-        root.put("version", 1)
+        root.put("version", 2)
         root.put("exportedAt", System.currentTimeMillis())
         root.put("userId", userId)
+        root.put("backupId", UUID.randomUUID().toString())
+        root.put("user", JSONObject().apply {
+            put("name", user.name)
+            put("email", user.email)
+        })
 
         val accountsArr = JSONArray()
         accounts.forEach { a ->
@@ -1085,6 +1172,8 @@ class FinanceRepository(
                 put("accountToId", t.accountToId ?: "")
                 put("categoryId", t.categoryId ?: "")
                 put("loanId", t.loanId ?: "")
+                put("relatedTransactionId", t.relatedTransactionId ?: "")
+                put("feeAmount", t.feeAmount)
             })
         }
         root.put("transactions", transactionsArr)
@@ -1100,6 +1189,8 @@ class FinanceRepository(
                 put("startDate", l.startDate)
                 put("accountId", l.accountId ?: "")
                 put("interestMode", l.interestMode)
+                put("interestFrequency", l.interestFrequency ?: "")
+                put("remainingAmount", l.remainingAmount)
                 put("status", l.status)
                 put("notes", l.notes ?: "")
             })
@@ -1164,13 +1255,23 @@ class FinanceRepository(
 
     suspend fun importFullJson(userId: String, jsonStr: String): Result<Int> = runCatching {
         val root = JSONObject(jsonStr)
+        val backupId = root.optString("backupId").ifBlank {
+            root.optString("userId").ifBlank { "legacy" }
+        }
+        fun scopedId(type: String, sourceId: String): String =
+            UUID.nameUUIDFromBytes("sfinance:$userId:$backupId:$type:$sourceId".toByteArray()).toString()
+
+        val accountIds = mutableMapOf<String, String>()
+        val categoryIds = mutableMapOf<String, String>()
+        val transactionIds = mutableMapOf<String, String>()
+        val loanIds = mutableMapOf<String, String>()
         var count = 0
 
         database.withTransaction {
             // 1. Users (if present, update active user's name/email)
             val usersArr = root.optJSONArray("users")
-            if (usersArr != null && usersArr.length() > 0) {
-                val userObj = usersArr.getJSONObject(0)
+            val userObj = root.optJSONObject("user") ?: usersArr?.takeIf { it.length() > 0 }?.getJSONObject(0)
+            if (userObj != null) {
                 val impName = userObj.optString("name").trim()
                 val impEmail = userObj.optString("email").trim()
                 if (impName.isNotBlank() || impEmail.isNotBlank()) {
@@ -1191,6 +1292,9 @@ class FinanceRepository(
             if (accountsArr != null) {
                 for (i in 0 until accountsArr.length()) {
                     val obj = accountsArr.getJSONObject(i)
+                    val sourceId = obj.optString("id").ifBlank { "account-$i" }
+                    val accountId = scopedId("account", sourceId)
+                    accountIds[sourceId] = accountId
                     val rawType = obj.optString("type", AccountType.BANK.name).trim().uppercase()
                     val accType = try {
                         AccountType.valueOf(rawType).name
@@ -1202,7 +1306,7 @@ class FinanceRepository(
                     }
                     accountDao.insert(
                         Account(
-                            id = obj.optString("id", UUID.randomUUID().toString()),
+                            id = accountId,
                             userId = userId,
                             name = obj.optString("name", "Account"),
                             type = accType,
@@ -1222,7 +1326,9 @@ class FinanceRepository(
             if (categoriesArr != null) {
                 for (i in 0 until categoriesArr.length()) {
                     val obj = categoriesArr.getJSONObject(i)
-                    val catId = obj.optString("id", UUID.randomUUID().toString())
+                    val sourceCatId = obj.optString("id").ifBlank { "category-$i" }
+                    val catId = scopedId("category", sourceCatId)
+                    categoryIds[sourceCatId] = catId
                     val rawType = obj.optString("type", CategoryType.EXPENSE.name).trim()
                     val catType = if (rawType.equals("INCOME", ignoreCase = true)) CategoryType.INCOME.name else CategoryType.EXPENSE.name
                     val catName = obj.optString("name").ifBlank {
@@ -1279,10 +1385,11 @@ class FinanceRepository(
                         else TransactionType.EXPENSE.name
                     }
 
-                    val catId = obj.optString("categoryId").ifEmpty { null }
+                    val sourceCatId = obj.optString("categoryId").ifEmpty { null }
+                    val catId = sourceCatId?.let { categoryIds[it] ?: scopedId("category", it) }
                     // Synthesize category if not in categories table
                     if (catId != null && !knownCategoryIds.contains(catId) && categoryDao.getById(catId) == null) {
-                        val slug = catId.substringAfterLast("-", catId).replace("_", " ").trim()
+                        val slug = (sourceCatId ?: catId).substringAfterLast("-", sourceCatId ?: catId).replace("_", " ").trim()
                         val synthName = slug.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
                         val synthType = if (catId.startsWith("income", ignoreCase = true) || txnType == TransactionType.INCOME.name) {
                             CategoryType.INCOME.name
@@ -1302,7 +1409,9 @@ class FinanceRepository(
 
                     transactionDao.insert(
                         TransactionEntity(
-                            id = obj.optString("id", UUID.randomUUID().toString()),
+                            id = scopedId("transaction", obj.optString("id").ifBlank { "transaction-$i" }).also {
+                                transactionIds[obj.optString("id").ifBlank { "transaction-$i" }] = it
+                            },
                             userId = userId,
                             type = txnType,
                             name = obj.optString("name").ifEmpty { null },
@@ -1310,10 +1419,12 @@ class FinanceRepository(
                             amount = obj.optDouble("amount", 0.0),
                             date = date,
                             dateBs = dateBs,
-                            accountFromId = obj.optString("accountFromId").ifEmpty { null },
-                            accountToId = obj.optString("accountToId").ifEmpty { null },
+                            accountFromId = obj.optString("accountFromId").ifEmpty { null }?.let { accountIds[it] ?: scopedId("account", it) },
+                            accountToId = obj.optString("accountToId").ifEmpty { null }?.let { accountIds[it] ?: scopedId("account", it) },
                             categoryId = catId,
-                            loanId = obj.optString("loanId").ifEmpty { null }
+                            loanId = obj.optString("loanId").ifEmpty { null }?.let { loanIds[it] ?: scopedId("loan", it) },
+                            relatedTransactionId = obj.optString("relatedTransactionId").ifEmpty { null }?.let { transactionIds[it] ?: scopedId("transaction", it) },
+                            feeAmount = obj.optDouble("feeAmount", 0.0)
                         )
                     )
                     count++
@@ -1325,6 +1436,9 @@ class FinanceRepository(
             if (loansArr != null) {
                 for (i in 0 until loansArr.length()) {
                     val obj = loansArr.getJSONObject(i)
+                    val sourceLoanId = obj.optString("id").ifBlank { "loan-$i" }
+                    val loanId = scopedId("loan", sourceLoanId)
+                    loanIds[sourceLoanId] = loanId
                     val rawStart = obj.opt("startDate")?.toString()?.trim() ?: ""
                     val startDate = if (rawStart.isNotBlank()) parseFlexibleDate(rawStart) else System.currentTimeMillis()
                     val rawNext = obj.opt("nextInterestDate")?.toString()?.trim() ?: ""
@@ -1345,17 +1459,18 @@ class FinanceRepository(
 
                     loanDao.insert(
                         Loan(
-                            id = obj.optString("id", UUID.randomUUID().toString()),
+                            id = loanId,
                             userId = userId,
                             counterparty = obj.optString("counterparty").ifBlank { obj.optString("name", "Unknown") },
                             type = loanType,
                             principal = obj.optDouble("principal", obj.optDouble("amount", 0.0)),
                             interestRate = obj.optDouble("interestRate", obj.optDouble("rate", 0.0)),
                             startDate = startDate,
-                            accountId = obj.optString("accountId").ifEmpty { null },
+                            accountId = obj.optString("accountId").ifEmpty { null }?.let { accountIds[it] ?: scopedId("account", it) },
                             interestMode = interestMode,
                             nextInterestDate = nextDate,
                             interestFrequency = obj.optString("interestFrequency", InterestFrequency.MONTHLY.name).uppercase(),
+                            remainingAmount = obj.optDouble("remainingAmount", obj.optDouble("principal", obj.optDouble("amount", 0.0))),
                             status = status,
                             notes = obj.optString("notes").ifEmpty { null }
                         )
@@ -1375,8 +1490,8 @@ class FinanceRepository(
                     val dateBs = if (rawDateBs.isNotBlank()) rawDateBs else NepaliDateConverter.adToBs(date).formatted
                     loanInterestDao.insert(
                         LoanInterest(
-                            id = obj.optString("id", UUID.randomUUID().toString()),
-                            loanId = obj.optString("loanId", ""),
+                            id = scopedId("loanInterest", obj.optString("id").ifBlank { "loan-interest-$i" }),
+                            loanId = obj.optString("loanId", "").let { loanIds[it] ?: scopedId("loan", it) },
                             amount = obj.optDouble("amount", 0.0),
                             date = date,
                             dateBs = dateBs
@@ -1393,9 +1508,9 @@ class FinanceRepository(
                     val obj = budgetsArr.getJSONObject(i)
                     budgetDao.insert(
                         Budget(
-                            id = obj.optString("id", UUID.randomUUID().toString()),
+                            id = scopedId("budget", obj.optString("id").ifBlank { "budget-$i" }),
                             userId = userId,
-                            categoryId = obj.optString("categoryId", ""),
+                            categoryId = categoryIds[obj.optString("categoryId", "")] ?: scopedId("category", obj.optString("categoryId", "")),
                             monthlyLimit = obj.optDouble("monthlyLimit", obj.optDouble("amount", obj.optDouble("limit", 0.0))),
                             rollover = obj.optBoolean("rollover", false)
                         )
@@ -1433,7 +1548,7 @@ class FinanceRepository(
 
                     wishlistDao.insert(
                         WishlistItem(
-                            id = obj.optString("id", UUID.randomUUID().toString()),
+                            id = scopedId("wishlist", obj.optString("id").ifBlank { "wishlist-$i" }),
                             userId = userId,
                             name = name,
                             estimatedCost = cost,
@@ -1486,7 +1601,7 @@ class FinanceRepository(
 
                     journalDao.insert(
                         JournalEntry(
-                            id = obj.optString("id", UUID.randomUUID().toString()),
+                            id = scopedId("journal", obj.optString("id").ifBlank { "journal-$i" }),
                             userId = userId,
                             content = content,
                             date = date,

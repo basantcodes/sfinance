@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.EmeraldDark
@@ -64,8 +67,13 @@ fun AuthScreen(
     var selectedTab by remember { mutableIntStateOf(0) } // 0 = Login, 1 = Register
 
     var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("demo@finance.np") }
-    var password by remember { mutableStateOf("password123") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    var validationMessage by remember { mutableStateOf<String?>(null) }
+
+    val emailIsValid = email.trim().matches(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
+    val formIsValid = emailIsValid && password.length >= 8 && (selectedTab == 0 || name.trim().length >= 2)
 
     Box(
         modifier = Modifier
@@ -120,12 +128,18 @@ fun AuthScreen(
                 TabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
+                        onClick = {
+                            selectedTab = 0
+                            validationMessage = null
+                        },
                         text = { Text("Sign In") }
                     )
                     Tab(
                         selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
+                        onClick = {
+                            selectedTab = 1
+                            validationMessage = null
+                        },
                         text = { Text("Register") }
                     )
                 }
@@ -133,7 +147,10 @@ fun AuthScreen(
                 if (selectedTab == 1) {
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it },
+                        onValueChange = {
+                            name = it
+                            validationMessage = null
+                        },
                         label = { Text("Full Name") },
                         leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                         singleLine = true,
@@ -152,7 +169,10 @@ fun AuthScreen(
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        validationMessage = null
+                    },
                     label = { Text("Email Address") },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -171,10 +191,21 @@ fun AuthScreen(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        validationMessage = null
+                    },
                     label = { Text("Password") },
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { showPassword = !showPassword }) {
+                            Icon(
+                                imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (showPassword) "Hide password" else "Show password"
+                            )
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -188,6 +219,10 @@ fun AuthScreen(
                         cursorColor = EmeraldPrimary
                     )
                 )
+
+                validationMessage?.let {
+                    FormFeedbackMessage(message = it, isError = true)
+                }
 
                 errorMessage?.let {
                     FormFeedbackMessage(
@@ -213,6 +248,15 @@ fun AuthScreen(
 
                     Button(
                         onClick = {
+                            if (!formIsValid) {
+                                validationMessage = when {
+                                    selectedTab == 1 && name.trim().length < 2 -> "Enter your full name"
+                                    !emailIsValid -> "Enter a valid email address"
+                                    password.length < 8 -> "Password must be at least 8 characters"
+                                    else -> "Please check your details"
+                                }
+                                return@Button
+                            }
                             if (selectedTab == 0) {
                                 onLogin(email, password)
                             } else {
@@ -227,6 +271,7 @@ fun AuthScreen(
                             containerColor = buttonContainerColor,
                             contentColor = Color.White
                         ),
+                        enabled = formIsValid,
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 3.dp,
                             pressedElevation = 8.dp,

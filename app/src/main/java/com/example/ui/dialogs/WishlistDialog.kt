@@ -34,8 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.data.local.entities.WishlistItem
 import com.example.data.nepali.NepaliDateConverter
+import com.example.ui.components.FormFeedbackMessage
 import com.example.ui.components.NepaliDatePickerDialog
 
 @Composable
@@ -65,6 +67,9 @@ fun WishlistDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.fillMaxWidth(0.94f),
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 6.dp,
         title = {
             Text(
                 text = if (itemToEdit == null) "New Wishlist Item" else "Edit Wishlist Item",
@@ -164,7 +169,7 @@ fun WishlistDialog(
                 )
 
                 errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    FormFeedbackMessage(message = it, isError = true)
                 }
             }
         },

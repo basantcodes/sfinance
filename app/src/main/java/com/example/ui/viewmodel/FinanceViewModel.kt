@@ -321,7 +321,8 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         notes: String?,
         fromAccountId: String?,
         toAccountId: String?,
-        categoryId: String?
+        categoryId: String?,
+        feeAmount: Double = 0.0
     ) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
@@ -335,7 +336,8 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 notes = notes,
                 fromAccountId = fromAccountId,
                 toAccountId = toAccountId,
-                categoryId = categoryId
+                categoryId = categoryId,
+                feeAmount = feeAmount
             )
         }
     }
@@ -350,7 +352,8 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         newNotes: String?,
         newAccountFromId: String?,
         newAccountToId: String?,
-        newCategoryId: String?
+        newCategoryId: String?,
+        newFeeAmount: Double = 0.0
     ) {
         viewModelScope.launch {
             transactionFeatureViewModel.updateTransaction(
@@ -363,7 +366,8 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 newNotes = newNotes,
                 newAccountFromId = newAccountFromId,
                 newAccountToId = newAccountToId,
-                newCategoryId = newCategoryId
+                newCategoryId = newCategoryId,
+                newFeeAmount = newFeeAmount
             )
         }
     }
@@ -439,9 +443,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun markLoanRepaid(loan: Loan, accountId: String?) {
+    fun markLoanRepaid(loan: Loan, accountId: String?, amount: Double) {
         viewModelScope.launch {
-            loanWishlistJournalFeatureViewModel.markLoanRepaid(loan, accountId)
+            loanWishlistJournalFeatureViewModel.markLoanRepaid(loan, accountId, amount)
         }
     }
 
@@ -569,10 +573,11 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         return authSettingsExportFeatureViewModel.exportCsv(userId)
     }
 
-    fun importJson(json: String) {
+    fun importJson(json: String, onResult: (Result<Int>) -> Unit = {}) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
             val res = authSettingsExportFeatureViewModel.importJson(userId, json)
+            onResult(res)
             res.fold(
                 onSuccess = { count ->
                     val txns = repository.getAllTransactions(userId)

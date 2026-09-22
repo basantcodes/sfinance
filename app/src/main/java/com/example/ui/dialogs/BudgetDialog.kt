@@ -28,9 +28,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.data.local.entities.Budget
 import com.example.data.local.entities.Category
 import com.example.data.local.entities.CategoryType
+import com.example.ui.components.FormFeedbackMessage
 
 @Composable
 fun BudgetDialog(
@@ -54,6 +56,9 @@ fun BudgetDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.fillMaxWidth(0.94f),
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 6.dp,
         title = {
             Text(
                 text = if (budgetToEdit == null) "Set Category Budget" else "Edit Budget",
@@ -123,7 +128,7 @@ fun BudgetDialog(
                 }
 
                 errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    FormFeedbackMessage(message = it, isError = true)
                 }
             }
         },
