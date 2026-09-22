@@ -5,3 +5,7 @@ Move the repository/domain logic that still reads and writes raw DAO data into c
 Replace the remaining implicit refresh triggers with explicit event-driven updates or a single refresh scheduler to eliminate hidden side effects and reduce race conditions between data flows.
 Add focused regression tests around auth flow, dashboard recalculation, and import/export behavior in a real project environment, because the current codebase has a lot of stateful logic that is hard to safely validate without automated coverage.
 These are the highest-value refactor items because they reduce risk, make lifecycle behavior predictable, and keep the app stable as more feature work is added
+
+
+
+
