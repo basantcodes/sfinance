@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Journal - Technical Workflow & Architecture Review</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a2b;
+      --panel-2: #1b243a;
+      --card: #f8fafc;
+      --text: #e5eefb;
+      --muted: #9bb0d0;
+      --primary: #22c55e;
+      --accent: #60a5fa;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #a78bfa;
+      --border: rgba(255,255,255,0.08);
+      --shadow: 0 18px 40px rgba(0,0,0,0.25);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(180deg, #0b1020 0%, #111827 100%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #dfeafc;
+    }
+
+    .status {
+      color: var(--primary);
+      font-weight: 600;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      margin: 0 0 12px;
+      letter-spacing: -0.04em;
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      margin: 30px 0 14px;
+      color: #def6ff;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      margin: 0 0 8px;
+      color: #ebf3ff;
+    }
+
+    .lead {
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 26px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: rgba(18, 26, 43, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .label {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .metric {
+      font-size: 1.9rem;
+      font-weight: 800;
+      margin: 0 0 4px;
+      color: #fff;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .section {
+      margin-top: 22px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      align-items: stretch;
+      margin-top: 10px;
+    }
+
+    .step {
+      background: linear-gradient(180deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      position: relative;
+      min-height: 120px;
+    }
+
+    .step .icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: rgba(96,165,250,0.15);
+      color: #bde3ff;
+    }
+
+    .arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 1.5rem;
+      margin-top: 12px;
+    }
+
+    ul.normal {
+      padding-left: 20px;
+      margin: 8px 0 0 0;
+      color: #dfeafc;
+    }
+
+    ul.normal li {
+      margin-bottom: 8px;
+    }
+
+    .list-card {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .risk {
+      border-left: 4px solid var(--warning);
+      background: rgba(245,158,11,0.06);
+      padding: 16px 18px;
+      border-radius: 12px;
+      color: white;
+    }
+
+    .danger {
+      border-left-color: var(--danger);
+      background: rgba(239,68,68,0.06);
+    }
+
+    .good {
+      border-left-color: var(--primary);
+      background: rgba(34,197,94,0.06);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(15,23,42,0.8);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(148,163,184,0.08);
+      color: #eaf2ff;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    td {
+      color: #dfeafc;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+
+    .pill.green { background: rgba(34,197,94,0.12); color: #8de6b0; }
+    .pill.yellow { background: rgba(245,158,11,0.12); color: #f7c86d; }
+    .pill.red { background: rgba(239,68,68,0.12); color: #f9a7a7; }
+    .pill.blue { background: rgba(96,165,250,0.12); color: #bfe0ff; }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-top: 12px;
+    }
+
+    .phase {
+      background: rgba(18, 26, 43, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .phase strong {
+      display: inline-block;
+      margin-bottom: 8px;
+      color: #9fe7ff;
+    }
+
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">Finance Journal</div>
+      <div class="status">Technical Workflow Review</div>
+    </div>
+
+    <h1>Project Structure & Technical Workflow</h1>
+    <p class="lead">
+      This Android app is a personal finance management system with account tracking, transactions, budgets, loans,
+      wishlist planning, journal notes, dashboard analytics, and export support. It is built around Jetpack Compose,
+      Room persistence, ViewModel-driven UI state, and a repository layer for business logic.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="label">Core stack</div>
+        <div class="metric">Kotlin</div>
+        <div class="small">Android app with Compose UI</div>
+      </div>
+      <div class="card">
+        <div class="label">Persistence</div>
+        <div class="metric">Room</div>
+        <div class="small">SQLite-backed local database</div>
+      </div>
+      <div class="card">
+        <div class="label">Architecture</div>
+        <div class="metric">MVVM</div>
+        <div class="small">ViewModel + StateFlow + UI state</div>
+      </div>
+      <div class="card">
+        <div class="label">Security</div>
+        <div class="metric">JWT</div>
+        <div class="small">BCrypt + preference storage</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>1. System Architecture Overview</h2>
+      <div class="flow">
+        <div class="step">
+          <div class="icon">1</div>
+          <h3>UI Layer</h3>
+          <div class="small">
+            Compose screens and dialogs in the app package. Main navigation, modals, record forms, dashboard cards,
+            and transaction flows live here.
+          </div>
+        </div>
+        <div class="step">
+          <div class="icon">2</div>
+          <h3>ViewModel</h3>
+          <div class="small">
+            FinanceViewModel holds auth state, filter state, dashboard state, and live application data updates.
+          </div>
+        </div>
+        <div class="step">
+          <div class="icon">3</div>
+          <h3>Repository</h3>
+          <div class="small">
+            FinanceRepository contains business rules like validation, account balance checks, affordability logic,
+            dashboard computing, and data mutation methods.
+          </div>
+        </div>
+        <div class="step">
+          <div class="icon">4</div>
+          <h3>Local Data</h3>
+          <div class="small">
+            Room database and entity models store users, accounts, categories, transactions, budgets, journals,
+            loans, and wishlist items.
+          </div>
+        </div>
+        <div class="step">
+          <div class="icon">5</div>
+          <h3>Secure layer</h3>
+          <div class="small">
+            Authentication uses BCrypt password hashing and JWT-based token persistence in preferences.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>2. Project Structure</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Package / Area</th>
+              <th>Responsibility</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>com.example.MainActivity</td>
+              <td>Application entry point and app shell</td>
+              <td>Hosts auth gating and the main navigation scaffold</td>
+            </tr>
+            <tr>
+              <td>ui.screens</td>
+              <td>Feature screens</td>
+              <td>Dashboard, Transactions, Accounts, Budgets, Loans, Wishlist, Journal, Docs</td>
+            </tr>
+            <tr>
+              <td>ui.dialogs</td>
+              <td>Create/edit forms</td>
+              <td>Account, budget, loan, transaction, journal, wishlist dialogs</td>
+            </tr>
+            <tr>
+              <td>ui.viewmodel</td>
+              <td>State orchestration</td>
+              <td>Auth, filters, dashboard refreshes, Flow aggregation</td>
+            </tr>
+            <tr>
+              <td>data.repository</td>
+              <td>Domain logic</td>
+              <td>Balance checks, affordability, dashboard aggregation, export logic</td>
+            </tr>
+            <tr>
+              <td>data.local</td>
+              <td>Persistence infra</td>
+              <td>Room database and DAO access</td>
+            </tr>
+            <tr>
+              <td>data.local.entities</td>
+              <td>Schema contracts</td>
+              <td>User, account, category, transaction, loan, budget, wishlist, journal</td>
+            </tr>
+            <tr>
+              <td>data.security</td>
+              <td>Auth and persistence</td>
+              <td>BCrypt, JWT, preferences manager</td>
+            </tr>
+            <tr>
+              <td>util</td>
+              <td>Cross-cutting helpers</td>
+              <td>PDF export and data conversion support</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>3. Actual Workflow in the App</h2>
+      <ul class="normal">
+        <li><strong>App launch:</strong> MainActivity starts, enables edge-to-edge mode, loads auth state and UI event flow.</li>
+        <li><strong>Authentication:</strong> On startup, FinanceViewModel checks the active user. If not present, it creates a demo user and logs them in automatically.</li>
+        <li><strong>Data hydration:</strong> On user login, refreshAllData starts several collectors for accounts, categories, budgets, transactions, loans, journal, and wishlist.</li>
+        <li><strong>Dashboard refresh:</strong> Repository computes dashboard metrics based on current month/year and user data.</li>
+        <li><strong>Transactions:</strong> user actions add/edit/delete transactions; repository validates account balances before mutating state.</li>
+        <li><strong>Budget & wishlist:</strong> repository calculates spending coverage, affordability thresholds, and progress percentages.</li>
+        <li><strong>Export:</strong> PDF exporter can generate reports from dashboard and transaction data.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>4. What Is Strong in the Current Design</h2>
+      <div class="list-card">
+        <div class="risk good">
+          <strong>Good:</strong> Clear separation between UI state, repository logic, and local persistence.
+        </div>
+        <div class="risk good">
+          <strong>Good:</strong> Room entities are structured around the real domain model and indexed for common access patterns.
+        </div>
+        <div class="risk good">
+          <strong>Good:</strong> Security basics are in place: password hashing with BCrypt and token-based session tracking.
+        </div>
+        <div class="risk good">
+          <strong>Good:</strong> Dashboard data and budget logic are aggregated centrally, reducing duplication across screens.
+        </div>
+        <div class="risk good">
+          <strong>Good:</strong> Compose UI allows fast iteration and coherent user experience in a single app shell.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>5. Weaknesses & Technical Debt</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Issue</th>
+              <th>Impact</th>
+              <th>Priority</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>App shell / UI composition</td>
+              <td>MainActivity and MainAppScaffold are overloaded with navigation, dialog state, screen logic, and event handling.</td>
+              <td>Hard to maintain, harder to scale, increasing regression risk.</td>
+              <td><span class="pill red">High</span></td>
+            </tr>
+            <tr>
+              <td>ViewModel responsibilities</td>
+              <td>FinanceViewModel owns auth, dashboard, account, budgets, loans, wishlist, journal, PDF-related actions, and data refresh orchestration.</td>
+              <td>Single giant state container; not aligned with feature-by-feature boundaries.</td>
+              <td><span class="pill red">High</span></td>
+            </tr>
+            <tr>
+              <td>Repository boundary leakage</td>
+              <td>ViewModel directly accesses database DAO and refreshes some state outside repository patterns.</td>
+              <td>Tight coupling; logic is spread across layers instead of being centralized.</td>
+              <td><span class="pill red">High</span></td>
+            </tr>
+            <tr>
+              <td>Database migration strategy</td>
+              <td>Room database uses fallbackToDestructiveMigration() and version 1 only.</td>
+              <td>Unsafe for user data over longer-term app growth and versioned releases.</td>
+              <td><span class="pill red">High</span></td>
+            </tr>
+            <tr>
+              <td>Authentication behavior</td>
+              <td>Auto-create demo user, auto-rename user names, and hardcoded values in auth boot flow.</td>
+              <td>Magic behavior; not configurable and may confuse real users and production onboarding.</td>
+              <td><span class="pill yellow">Medium</span></td>
+            </tr>
+            <tr>
+              <td>State flow duplication</td>
+              <td>Multiple collectors triggering refreshDashboard and refreshWishlist repeatedly.</td>
+              <td>Performance overhead and harder reasoning when UI state updates race each other.</td>
+              <td><span class="pill yellow">Medium</span></td>
+            </tr>
+            <tr>
+              <td>Testing coverage</td>
+              <td>Most critical flows appear to be business logic and data mutation features without deep automated tests.</td>
+              <td>Risk of silent regressions in core financial logic.</td>
+              <td><span class="pill red">High</span></td>
+            </tr>
+            <tr>
+              <td>Dependency management</td>
+              <td>No DI framework such as Hilt or Koin.</td>
+              <td>Manual dependency wiring makes the app harder to scale and harder to test.</td>
+              <td><span class="pill yellow">Medium</span></td>
+            </tr>
+            <tr>
+              <td>Domain clarity</td>
+              <td>String-based enums and raw IDs are common; some validation is not strongly typed.</td>
+              <td>Prone to invalid state and more runtime bugs.</td>
+              <td><span class="pill yellow">Medium</span></td>
+            </tr>
+            <tr>
+              <td>Security production posture</td>
+              <td>Token storage in preferences is convenient but not the strongest production setup.</td>
+              <td>Requires stricter token lifecycle and encrypted storage for real-world deployments.</td>
+              <td><span class="pill yellow">Medium</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>6. Specific Improvement Recommendations</h2>
+      <div class="timeline">
+        <div class="phase">
+          <strong>Phase 1: Stabilize</strong>
+          <ul class="normal">
+            <li>Introduce explicit feature-level ViewModels per screen or module.</li>
+            <li>Separate navigation and modal state from MainActivity.</li>
+            <li>Add migration handling and schema versioning in Room.</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <strong>Phase 2: Refactor architecture</strong>
+          <ul class="normal">
+            <li>Use Hilt for dependency injection and better lifecycle management.</li>
+            <li>Move data-init and heavy aggregation logic into dedicated use cases or services.</li>
+            <li>Use sealed UI states for each screen instead of ad hoc mutable state flags.</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <strong>Phase 3: Quality & resilience</strong>
+          <ul class="normal">
+            <li>Add repository and transaction tests: balances, budget math, loans, affordability rules.</li>
+            <li>Introduce robust error handling and user-friendly validation messages.</li>
+            <li>Track analytics and crash reporting for business-critical flows.</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <strong>Phase 4: Product maturity</strong>
+          <ul class="normal">
+            <li>Support cloud sync and multi-device backup.</li>
+            <li>Add export/import, encrypted backups, and stronger auth lifecycle controls.</li>
+            <li>Improve dashboard customization, filtering, and reporting depth.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>7. Recommended Future Architecture</h2>
+      <div class="flow">
+        <div class="step">
+          <div class="icon">A</div>
+          <h3>Presentation</h3>
+          <div class="small">Compose screens + navigation graph + reusable feature widgets</div>
+        </div>
+        <div class="step">
+          <div class="icon">B</div>
+          <h3>ViewModels</h3>
+          <div class="small">One ViewModel per feature or screen with typed UI states</div>
+        </div>
+        <div class="step">
+          <div class="icon">C</div>
+          <h3>Use Cases</h3>
+          <div class="small">Add transaction, budget refresh, analytics, affordability calculations</div>
+        </div>
+        <div class="step">
+          <div class="icon">D</div>
+          <h3>Repository</h3>
+          <div class="small">Data access only, with domain-level validations and results</div>
+        </div>
+        <div class="step">
+          <div class="icon">E</div>
+          <h3>Data sources</h3>
+          <div class="small">Room DB, encrypted preferences, file export, future sync services</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>8. Bottom Line</h2>
+      <div class="risk">
+        This is a functional and feature-rich personal finance app with a solid MVP foundation. The main issues are not a lack of ideas or capability, but architectural scale and maintainability as the product grows. The next step is to split the monolithic screen logic, enforce cleaner boundaries between layers, and build automated testing around the finance rules.
+      </div>
+    </div>
+
+    <div class="footer">
+      Review notes based on the current Android project structure, ViewModel, repository, and room schema definitions.
+    </div>
+  </div>
+</body>
+</html>

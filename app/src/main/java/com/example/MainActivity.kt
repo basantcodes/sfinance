@@ -97,6 +97,9 @@ import com.example.ui.dialogs.JournalDialog
 import com.example.ui.dialogs.LoanDialog
 import com.example.ui.dialogs.TransactionDialog
 import com.example.ui.dialogs.WishlistDialog
+import com.example.ui.navigation.AppScreen
+import com.example.ui.navigation.AppShellState
+import com.example.ui.navigation.rememberAppShellState
 import com.example.ui.screens.AccountsScreen
 import com.example.ui.screens.AuthScreen
 import com.example.ui.screens.BudgetsScreen
@@ -110,17 +113,6 @@ import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.FinanceJournalTheme
 import com.example.ui.viewmodel.FinanceViewModel
 import kotlinx.coroutines.flow.collectLatest
-
-enum class AppScreen {
-    DASHBOARD,
-    TRANSACTIONS,
-    ACCOUNTS,
-    BUDGETS,
-    LOANS,
-    WISHLIST,
-    JOURNAL,
-    DOCS
-}
 
 class MainActivity : ComponentActivity() {
 
@@ -167,73 +159,20 @@ fun MainAppScaffold(
     snackbarHostState: SnackbarHostState
 ) {
     val context = LocalContext.current
-    var currentScreen by remember { mutableStateOf(AppScreen.DASHBOARD) }
-    val screenStack = remember { mutableStateListOf(AppScreen.DASHBOARD) }
-    var showExitConfirmDialog by remember { mutableStateOf(false) }
-    var showMoreSheet by remember { mutableStateOf(false) }
-
-    // Dialog state holders
-    var showAddTransactionDialog by remember { mutableStateOf(false) }
-    var transactionToEdit by remember { mutableStateOf<TransactionEntity?>(null) }
-
-    var showAddAccountDialog by remember { mutableStateOf(false) }
-    var accountToEdit by remember { mutableStateOf<Account?>(null) }
-
-    var showAddBudgetDialog by remember { mutableStateOf(false) }
-    var budgetToEdit by remember { mutableStateOf<Budget?>(null) }
-
-    var showAddLoanDialog by remember { mutableStateOf(false) }
-    var loanToEdit by remember { mutableStateOf<Loan?>(null) }
-
-    var showAddWishlistDialog by remember { mutableStateOf(false) }
-    var wishlistItemToEdit by remember { mutableStateOf<WishlistItem?>(null) }
-
-    var showAddJournalDialog by remember { mutableStateOf(false) }
-    var journalEntryToEdit by remember { mutableStateOf<JournalEntry?>(null) }
-
-    fun navigateTo(screen: AppScreen) {
-        if (screen == AppScreen.DASHBOARD) {
-            screenStack.clear()
-            screenStack.add(AppScreen.DASHBOARD)
-            currentScreen = AppScreen.DASHBOARD
-        } else {
-            currentScreen = screen
-        }
-    }
+    val shellState = rememberAppShellState()
+    val currentScreen = shellState.currentScreen
 
     BackHandler {
-        if (showExitConfirmDialog) {
-            showExitConfirmDialog = false
+        if (shellState.showExitConfirmDialog) {
+            shellState.showExitConfirmDialog = false
             return@BackHandler
         }
 
-        // 1. Close open bottom sheet or dialogs first
-        val hasOpenModal = showMoreSheet ||
-            showAddTransactionDialog || transactionToEdit != null ||
-            showAddAccountDialog || accountToEdit != null ||
-            showAddBudgetDialog || budgetToEdit != null ||
-            showAddLoanDialog || loanToEdit != null ||
-            showAddWishlistDialog || wishlistItemToEdit != null ||
-            showAddJournalDialog || journalEntryToEdit != null
-
-        if (hasOpenModal) {
-            showMoreSheet = false
-            showAddTransactionDialog = false
-            transactionToEdit = null
-            showAddAccountDialog = false
-            accountToEdit = null
-            showAddBudgetDialog = false
-            budgetToEdit = null
-            showAddLoanDialog = false
-            loanToEdit = null
-            showAddWishlistDialog = false
-            wishlistItemToEdit = null
-            showAddJournalDialog = false
-            journalEntryToEdit = null
+        if (shellState.hasOpenModal()) {
+            shellState.clearAllModalState()
             return@BackHandler
         }
 
-        // 2. From any sub-screen accessed via "More" menu -> back navigates directly to Dashboard
         val isMoreSubScreen = currentScreen in listOf(
             AppScreen.LOANS,
             AppScreen.WISHLIST,
@@ -241,20 +180,16 @@ fun MainAppScaffold(
             AppScreen.DOCS
         )
         if (isMoreSubScreen) {
-            currentScreen = AppScreen.DASHBOARD
-            screenStack.clear()
-            screenStack.add(AppScreen.DASHBOARD)
+            shellState.resetToDashboard()
             return@BackHandler
         }
 
-        // 3. From any of the four root bottom-nav tabs (Dashboard, Transactions, Accounts, Budget)
-        // -> back triggers the custom exit confirmation dialog directly without navigating anywhere first
-        showExitConfirmDialog = true
+        shellState.showExitConfirmDialog = true
     }
 
-    if (showExitConfirmDialog) {
+    if (shellState.showExitConfirmDialog) {
         Dialog(
-            onDismissRequest = { showExitConfirmDialog = false },
+            onDismissRequest = { shellState.showExitConfirmDialog = false },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Surface(
@@ -304,7 +239,7 @@ fun MainAppScaffold(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { showExitConfirmDialog = false },
+                            onClick = { shellState.showExitConfirmDialog = false },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(46.dp),
@@ -314,7 +249,7 @@ fun MainAppScaffold(
                         }
                         Button(
                             onClick = {
-                                showExitConfirmDialog = false
+                                shellState.showExitConfirmDialog = false
                                 (context as? Activity)?.finish()
                             },
                             modifier = Modifier
@@ -372,11 +307,7 @@ fun MainAppScaffold(
                 ) {
                     if (isMoreActive) {
                         IconButton(
-                            onClick = {
-                                currentScreen = AppScreen.DASHBOARD
-                                screenStack.clear()
-                                screenStack.add(AppScreen.DASHBOARD)
-                            },
+                            onClick = { shellState.resetToDashboard() },
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
@@ -412,12 +343,12 @@ fun MainAppScaffold(
                 FloatingActionButton(
                     onClick = {
                         when (currentScreen) {
-                            AppScreen.DASHBOARD, AppScreen.TRANSACTIONS -> showAddTransactionDialog = true
-                            AppScreen.ACCOUNTS -> showAddAccountDialog = true
-                            AppScreen.BUDGETS -> showAddBudgetDialog = true
-                            AppScreen.LOANS -> showAddLoanDialog = true
-                            AppScreen.WISHLIST -> showAddWishlistDialog = true
-                            AppScreen.JOURNAL -> showAddJournalDialog = true
+                            AppScreen.DASHBOARD, AppScreen.TRANSACTIONS -> shellState.showAddTransactionDialog = true
+                            AppScreen.ACCOUNTS -> shellState.showAddAccountDialog = true
+                            AppScreen.BUDGETS -> shellState.showAddBudgetDialog = true
+                            AppScreen.LOANS -> shellState.showAddLoanDialog = true
+                            AppScreen.WISHLIST -> shellState.showAddWishlistDialog = true
+                            AppScreen.JOURNAL -> shellState.showAddJournalDialog = true
                             else -> {}
                         }
                     },
@@ -463,9 +394,9 @@ fun MainAppScaffold(
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
                                     if (screen != null) {
-                                        navigateTo(screen)
+                                        shellState.navigateTo(screen)
                                     } else {
-                                        showMoreSheet = true
+                                        shellState.showMoreSheet = true
                                     }
                                 }
                                 .padding(vertical = 2.dp),
@@ -509,38 +440,38 @@ fun MainAppScaffold(
             when (currentScreen) {
                 AppScreen.DASHBOARD -> DashboardScreen(
                     viewModel = viewModel,
-                    onNavigateToTransactions = { navigateTo(AppScreen.TRANSACTIONS) },
-                    onNavigateToBudgets = { navigateTo(AppScreen.BUDGETS) },
-                    onNavigateToLoans = { navigateTo(AppScreen.LOANS) },
-                    onOpenAddTransaction = { showAddTransactionDialog = true }
+                    onNavigateToTransactions = { shellState.navigateTo(AppScreen.TRANSACTIONS) },
+                    onNavigateToBudgets = { shellState.navigateTo(AppScreen.BUDGETS) },
+                    onNavigateToLoans = { shellState.navigateTo(AppScreen.LOANS) },
+                    onOpenAddTransaction = { shellState.showAddTransactionDialog = true }
                 )
                 AppScreen.TRANSACTIONS -> TransactionsScreen(
                     viewModel = viewModel,
-                    onOpenAddTransaction = { showAddTransactionDialog = true },
-                    onOpenEditTransaction = { txn -> transactionToEdit = txn }
+                    onOpenAddTransaction = { shellState.showAddTransactionDialog = true },
+                    onOpenEditTransaction = { txn -> shellState.transactionToEdit = txn }
                 )
                 AppScreen.ACCOUNTS -> AccountsScreen(
                     viewModel = viewModel,
-                    onOpenAddAccount = { showAddAccountDialog = true },
-                    onOpenEditAccount = { acc -> accountToEdit = acc }
+                    onOpenAddAccount = { shellState.showAddAccountDialog = true },
+                    onOpenEditAccount = { acc -> shellState.accountToEdit = acc }
                 )
                 AppScreen.BUDGETS -> BudgetsScreen(
                     viewModel = viewModel,
-                    onOpenAddBudget = { showAddBudgetDialog = true },
-                    onOpenEditBudget = { b -> budgetToEdit = b }
+                    onOpenAddBudget = { shellState.showAddBudgetDialog = true },
+                    onOpenEditBudget = { b -> shellState.budgetToEdit = b }
                 )
                 AppScreen.LOANS -> LoansScreen(
                     viewModel = viewModel,
-                    onOpenAddLoan = { showAddLoanDialog = true }
+                    onOpenAddLoan = { shellState.showAddLoanDialog = true }
                 )
                 AppScreen.WISHLIST -> WishlistScreen(
                     viewModel = viewModel,
-                    onOpenAddWishlist = { showAddWishlistDialog = true }
+                    onOpenAddWishlist = { shellState.showAddWishlistDialog = true }
                 )
                 AppScreen.JOURNAL -> JournalScreen(
                     viewModel = viewModel,
-                    onOpenAddEntry = { showAddJournalDialog = true },
-                    onOpenEditEntry = { entry -> journalEntryToEdit = entry }
+                    onOpenAddEntry = { shellState.showAddJournalDialog = true },
+                    onOpenEditEntry = { entry -> shellState.journalEntryToEdit = entry }
                 )
                 AppScreen.DOCS -> DocsScreen(
                     viewModel = viewModel,
@@ -551,10 +482,10 @@ fun MainAppScaffold(
     }
 
     // --- MORE BOTTOM SHEET ---
-    if (showMoreSheet) {
+    if (shellState.showMoreSheet) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ModalBottomSheet(
-            onDismissRequest = { showMoreSheet = false },
+            onDismissRequest = { shellState.showMoreSheet = false },
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
@@ -582,8 +513,8 @@ fun MainAppScaffold(
                     subtitle = "Track lent, borrowed, interest & repayments",
                     isSelected = currentScreen == AppScreen.LOANS,
                     onClick = {
-                        showMoreSheet = false
-                        navigateTo(AppScreen.LOANS)
+                        shellState.showMoreSheet = false
+                        shellState.navigateTo(AppScreen.LOANS)
                     }
                 )
 
@@ -596,8 +527,8 @@ fun MainAppScaffold(
                     subtitle = "Financial goals & affordability forecasting",
                     isSelected = currentScreen == AppScreen.WISHLIST,
                     onClick = {
-                        showMoreSheet = false
-                        navigateTo(AppScreen.WISHLIST)
+                        shellState.showMoreSheet = false
+                        shellState.navigateTo(AppScreen.WISHLIST)
                     }
                 )
 
@@ -610,8 +541,8 @@ fun MainAppScaffold(
                     subtitle = "Financial thoughts, reflections & mood logs",
                     isSelected = currentScreen == AppScreen.JOURNAL,
                     onClick = {
-                        showMoreSheet = false
-                        navigateTo(AppScreen.JOURNAL)
+                        shellState.showMoreSheet = false
+                        shellState.navigateTo(AppScreen.JOURNAL)
                     }
                 )
 
@@ -624,8 +555,8 @@ fun MainAppScaffold(
                     subtitle = "PDF statements, JSON/CSV backups & settings",
                     isSelected = currentScreen == AppScreen.DOCS,
                     onClick = {
-                        showMoreSheet = false
-                        navigateTo(AppScreen.DOCS)
+                        shellState.showMoreSheet = false
+                        shellState.navigateTo(AppScreen.DOCS)
                     }
                 )
 
@@ -640,7 +571,7 @@ fun MainAppScaffold(
                     subtitle = "Log out from your offline account",
                     isSelected = false,
                     onClick = {
-                        showMoreSheet = false
+                        shellState.showMoreSheet = false
                         viewModel.logout()
                     }
                 )
@@ -649,25 +580,25 @@ fun MainAppScaffold(
     }
 
     // --- TRANSACTION DIALOG ---
-    if (showAddTransactionDialog || transactionToEdit != null) {
+    if (shellState.showAddTransactionDialog || shellState.transactionToEdit != null) {
         TransactionDialog(
-            transactionToEdit = transactionToEdit,
+            transactionToEdit = shellState.transactionToEdit,
             accounts = accounts,
             categories = categories,
             currency = currency,
             onDismissRequest = {
-                showAddTransactionDialog = false
-                transactionToEdit = null
+                shellState.showAddTransactionDialog = false
+                shellState.transactionToEdit = null
             },
             onSaveTransaction = { type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId ->
-                val old = transactionToEdit
+                val old = shellState.transactionToEdit
                 if (old == null) {
                     viewModel.createTransaction(type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId)
                 } else {
                     viewModel.updateTransaction(old, type, amount, date, dateBs, name, notes, fromAcc, toAcc, catId)
                 }
-                showAddTransactionDialog = false
-                transactionToEdit = null
+                shellState.showAddTransactionDialog = false
+                shellState.transactionToEdit = null
             },
             onQuickCreateCategory = { name, type ->
                 viewModel.createCategory(name, type)
@@ -676,92 +607,92 @@ fun MainAppScaffold(
     }
 
     // --- ACCOUNT DIALOG ---
-    if (showAddAccountDialog || accountToEdit != null) {
+    if (shellState.showAddAccountDialog || shellState.accountToEdit != null) {
         AccountDialog(
-            accountToEdit = accountToEdit,
+            accountToEdit = shellState.accountToEdit,
             defaultCurrency = currency,
             onDismissRequest = {
-                showAddAccountDialog = false
-                accountToEdit = null
+                shellState.showAddAccountDialog = false
+                shellState.accountToEdit = null
             },
             onSaveAccount = { name, type, balance, color, notes ->
-                val old = accountToEdit
+                val old = shellState.accountToEdit
                 if (old == null) {
                     viewModel.createAccount(name, type, balance, color, notes)
                 } else {
                     viewModel.updateAccount(old.copy(name = name, type = type.name, color = color, notes = notes))
                 }
-                showAddAccountDialog = false
-                accountToEdit = null
+                shellState.showAddAccountDialog = false
+                shellState.accountToEdit = null
             }
         )
     }
 
     // --- BUDGET DIALOG ---
-    if (showAddBudgetDialog || budgetToEdit != null) {
+    if (shellState.showAddBudgetDialog || shellState.budgetToEdit != null) {
         BudgetDialog(
-            budgetToEdit = budgetToEdit,
+            budgetToEdit = shellState.budgetToEdit,
             categories = categories,
             currency = currency,
             onDismissRequest = {
-                showAddBudgetDialog = false
-                budgetToEdit = null
+                shellState.showAddBudgetDialog = false
+                shellState.budgetToEdit = null
             },
             onSaveBudget = { categoryId, limit, rollover ->
                 viewModel.saveBudget(categoryId, limit, rollover)
-                showAddBudgetDialog = false
-                budgetToEdit = null
+                shellState.showAddBudgetDialog = false
+                shellState.budgetToEdit = null
             }
         )
     }
 
     // --- LOAN DIALOG ---
-    if (showAddLoanDialog || loanToEdit != null) {
+    if (shellState.showAddLoanDialog || shellState.loanToEdit != null) {
         LoanDialog(
-            loanToEdit = loanToEdit,
+            loanToEdit = shellState.loanToEdit,
             accounts = accounts,
             currency = currency,
             onDismissRequest = {
-                showAddLoanDialog = false
-                loanToEdit = null
+                shellState.showAddLoanDialog = false
+                shellState.loanToEdit = null
             },
             onSaveLoan = { counterparty, type, principal, rate, startDate, accId, mode, freq, notes ->
                 viewModel.createLoan(counterparty, type, principal, rate, startDate, accId, mode, freq, notes)
-                showAddLoanDialog = false
-                loanToEdit = null
+                shellState.showAddLoanDialog = false
+                shellState.loanToEdit = null
             }
         )
     }
 
     // --- WISHLIST DIALOG ---
-    if (showAddWishlistDialog || wishlistItemToEdit != null) {
+    if (shellState.showAddWishlistDialog || shellState.wishlistItemToEdit != null) {
         WishlistDialog(
-            itemToEdit = wishlistItemToEdit,
+            itemToEdit = shellState.wishlistItemToEdit,
             currency = currency,
             onDismissRequest = {
-                showAddWishlistDialog = false
-                wishlistItemToEdit = null
+                shellState.showAddWishlistDialog = false
+                shellState.wishlistItemToEdit = null
             },
             onSaveItem = { name, cost, priority, preferredDate, category, notes ->
                 viewModel.saveWishlistItem(name, cost, priority, preferredDate, category, notes)
-                showAddWishlistDialog = false
-                wishlistItemToEdit = null
+                shellState.showAddWishlistDialog = false
+                shellState.wishlistItemToEdit = null
             }
         )
     }
 
     // --- JOURNAL DIALOG ---
-    if (showAddJournalDialog || journalEntryToEdit != null) {
+    if (shellState.showAddJournalDialog || shellState.journalEntryToEdit != null) {
         JournalDialog(
-            entryToEdit = journalEntryToEdit,
+            entryToEdit = shellState.journalEntryToEdit,
             onDismissRequest = {
-                showAddJournalDialog = false
-                journalEntryToEdit = null
+                shellState.showAddJournalDialog = false
+                shellState.journalEntryToEdit = null
             },
             onSaveEntry = { content, mood, date ->
                 viewModel.saveJournalEntry(content, mood, date)
-                showAddJournalDialog = false
-                journalEntryToEdit = null
+                shellState.showAddJournalDialog = false
+                shellState.journalEntryToEdit = null
             }
         )
     }

@@ -700,6 +700,11 @@ class FinanceRepository(
     fun getWishlistByStatusFlow(userId: String, status: WishlistStatus): Flow<List<WishlistItem>> =
         wishlistDao.getByStatusFlow(userId, status.name)
 
+    suspend fun getWishlistWithAffordability(userId: String): List<WishlistItemWithAffordability> {
+        val rawItems = wishlistDao.getAll(userId)
+        return rawItems.map { item -> calculateAffordability(item) }
+    }
+
     suspend fun createWishlistItem(
         userId: String,
         name: String,

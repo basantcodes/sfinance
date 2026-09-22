@@ -1,0 +1,7 @@
+High-priority refactor work still needed
+Split the remaining large state orchestration in FinanceViewModel.kt into a true screen-state coordinator plus domain-specific state holders so it stops acting as both data source and business logic container.
+Centralize auth/session and data-refresh policy in one place instead of mixing active-user resolution, boot-time logic, and flow collection inside the same ViewModel; this will make login/logout lifecycle easier to reason about.
+Move the repository/domain logic that still reads and writes raw DAO data into clearer service-style boundaries, especially around dashboard aggregation, wishlist affordability, and import/export rules, so UI code is not coupled to persistence behavior.
+Replace the remaining implicit refresh triggers with explicit event-driven updates or a single refresh scheduler to eliminate hidden side effects and reduce race conditions between data flows.
+Add focused regression tests around auth flow, dashboard recalculation, and import/export behavior in a real project environment, because the current codebase has a lot of stateful logic that is hard to safely validate without automated coverage.
+These are the highest-value refactor items because they reduce risk, make lifecycle behavior predictable, and keep the app stable as more feature work is added

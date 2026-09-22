@@ -24,6 +24,8 @@ import com.example.data.repository.FinanceRepository
 import com.example.data.repository.WishlistItemWithAffordability
 import com.example.data.security.PreferenceManager
 import com.example.util.PdfExporter
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -49,6 +51,30 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     val database = AppDatabase.getDatabase(application)
     val preferenceManager = PreferenceManager(application)
     val repository = FinanceRepository(database, preferenceManager)
+
+    private val accountFeatureViewModel = AccountFeatureViewModel(repository) { msg ->
+        viewModelScope.launch { _uiEvent.emit(msg) }
+    }
+
+    private val transactionFeatureViewModel = TransactionFeatureViewModel(repository) { msg ->
+        viewModelScope.launch { _uiEvent.emit(msg) }
+    }
+
+    private val budgetCategoryFeatureViewModel = BudgetCategoryFeatureViewModel(repository) { msg ->
+        viewModelScope.launch { _uiEvent.emit(msg) }
+    }
+
+    private val loanWishlistJournalFeatureViewModel = LoanWishlistJournalFeatureViewModel(repository) { msg ->
+        viewModelScope.launch { _uiEvent.emit(msg) }
+    }
+
+    private val authSettingsExportFeatureViewModel = AuthSettingsExportFeatureViewModel(
+        app = getApplication(),
+        repository = repository,
+        preferenceManager = preferenceManager
+    ) { msg ->
+        viewModelScope.launch { _uiEvent.emit(msg) }
+    }
 
     // Auth State
     private val _authState = MutableStateFlow(AuthUiState(isLoading = true))
@@ -132,30 +158,33 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         checkCurrentAuth()
     }
 
+    private var derivedRefreshJob: Job? = null
+    private val userDataJobs = mutableListOf<Job>()
+
     private fun checkCurrentAuth() {
         viewModelScope.launch {
             val user = repository.getActiveUser()
             if (user != null) {
-                val effectiveUser = if (user.name == "Prashant Sharma") {
-                    val renamed = user.copy(name = "Sarmila Adhikari")
-                    repository.updateUser(renamed)
-                    renamed
-                } else {
-                    user
-                }
-                _authState.value = AuthUiState(isAuthenticated = true, currentUser = effectiveUser, isLoading = false)
-                onUserLoggedIn(effectiveUser)
+                _authState.value = AuthUiState(isAuthenticated = true, currentUser = user, isLoading = false)
+                onUserLoggedIn(user)
             } else {
-                // Auto create demo / primary user if empty for instant first-time delight
-                val demoResult = repository.register("Sarmila Adhikari", "demo@finance.np", "password123")
-                if (demoResult.isSuccess) {
-                    val demoUser = demoResult.getOrThrow()
-                    _authState.value = AuthUiState(isAuthenticated = true, currentUser = demoUser, isLoading = false)
-                    onUserLoggedIn(demoUser)
-                } else {
-                    _authState.value = AuthUiState(isAuthenticated = false, isLoading = false)
-                }
+                _authState.value = AuthUiState(isAuthenticated = false, isLoading = false)
             }
+        }
+    }
+
+    private fun stopUserDataCollectors() {
+        userDataJobs.forEach { it.cancel() }
+        userDataJobs.clear()
+    }
+
+    private fun scheduleDerivedRefresh(userId: String) {
+        if (derivedRefreshJob?.isActive == true) return
+        derivedRefreshJob = viewModelScope.launch {
+            delay(100)
+            refreshDashboard(userId)
+            refreshWishlist(userId)
+            derivedRefreshJob = null
         }
     }
 
@@ -168,29 +197,26 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
 
     fun refreshAllData(targetUserId: String? = null) {
         val userId = targetUserId ?: _authState.value.currentUser?.id ?: return
-        viewModelScope.launch {
-            // Collect Accounts
+        stopUserDataCollectors()
+
+        userDataJobs += viewModelScope.launch {
             repository.getAccountsFlow(userId).collect { accList ->
                 _accounts.value = accList
-                refreshDashboard(userId)
-                refreshWishlist(userId)
+                scheduleDerivedRefresh(userId)
             }
         }
-        viewModelScope.launch {
-            // Collect Categories
+        userDataJobs += viewModelScope.launch {
             repository.getCategoriesFlow(userId).collect { catList ->
                 _categories.value = catList
             }
         }
-        viewModelScope.launch {
-            // Collect Budgets
+        userDataJobs += viewModelScope.launch {
             repository.getBudgetsFlow(userId).collect { bList ->
                 _budgets.value = bList
-                refreshDashboard(userId)
+                scheduleDerivedRefresh(userId)
             }
         }
-        viewModelScope.launch {
-            // Collect Transactions
+        userDataJobs += viewModelScope.launch {
             repository.getTransactionsFlow(userId).collect { txns ->
                 if (_transactions.value.isEmpty() && txns.isNotEmpty()) {
                     val latest = txns.maxByOrNull { it.date }
@@ -201,27 +227,24 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
                 _transactions.value = txns
-                refreshDashboard(userId)
-                refreshWishlist(userId)
+                scheduleDerivedRefresh(userId)
             }
         }
-        viewModelScope.launch {
-            // Collect Loans
+        userDataJobs += viewModelScope.launch {
             repository.getLoansFlow(userId).collect { lList ->
                 _loans.value = lList
-                refreshDashboard(userId)
+                scheduleDerivedRefresh(userId)
             }
         }
-        viewModelScope.launch {
-            // Collect Journal
+        userDataJobs += viewModelScope.launch {
             repository.getJournalEntriesFlow(userId).collect { jList ->
                 _journalEntries.value = jList
             }
         }
-        viewModelScope.launch {
-            // Collect Wishlist
-            repository.getWishlistFlow(userId).collect {
-                refreshWishlist(userId)
+        userDataJobs += viewModelScope.launch {
+            repository.getWishlistFlow(userId).collect { wishlistItems ->
+                _wishlistWithAffordability.value = repository.getWishlistWithAffordability(userId)
+                scheduleDerivedRefresh(userId)
             }
         }
     }
@@ -243,10 +266,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     private fun refreshWishlist(targetUserId: String? = null) {
         val userId = targetUserId ?: _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            val rawItems = database.wishlistDao().getAll(userId)
-            val computed = rawItems.map { item ->
-                repository.calculateAffordability(item)
-            }
+            val computed = repository.getWishlistWithAffordability(userId)
             _wishlistWithAffordability.value = computed
         }
     }
@@ -256,16 +276,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun login(email: String, pass: String) {
         viewModelScope.launch {
             _authState.value = _authState.value.copy(isLoading = true, error = null)
-            val result = repository.login(email, pass)
+            val result = authSettingsExportFeatureViewModel.login(email, pass)
             result.fold(
                 onSuccess = { user ->
                     _authState.value = AuthUiState(isAuthenticated = true, currentUser = user, isLoading = false)
                     onUserLoggedIn(user)
-                    _uiEvent.emit("Logged in as ${user.name}")
                 },
                 onFailure = { err ->
                     _authState.value = AuthUiState(isAuthenticated = false, error = err.message, isLoading = false)
-                    _uiEvent.emit(err.message ?: "Login failed")
                 }
             )
         }
@@ -274,16 +292,14 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun register(name: String, email: String, pass: String) {
         viewModelScope.launch {
             _authState.value = _authState.value.copy(isLoading = true, error = null)
-            val result = repository.register(name, email, pass)
+            val result = authSettingsExportFeatureViewModel.register(name, email, pass)
             result.fold(
                 onSuccess = { user ->
                     _authState.value = AuthUiState(isAuthenticated = true, currentUser = user, isLoading = false)
                     onUserLoggedIn(user)
-                    _uiEvent.emit("Account created for ${user.name}")
                 },
                 onFailure = { err ->
                     _authState.value = AuthUiState(isAuthenticated = false, error = err.message, isLoading = false)
-                    _uiEvent.emit(err.message ?: "Registration failed")
                 }
             )
         }
@@ -292,6 +308,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun logout() {
         repository.logout()
         _authState.value = AuthUiState(isAuthenticated = false, isLoading = false)
+        viewModelScope.launch { _uiEvent.emit("Signed out") }
     }
 
     // --- TRANSACTION ACTIONS ---
@@ -308,7 +325,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     ) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            val result = repository.createTransaction(
+            transactionFeatureViewModel.createTransaction(
                 userId = userId,
                 type = type,
                 amount = amount,
@@ -316,17 +333,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 dateBs = dateBs,
                 name = name,
                 notes = notes,
-                accountFromId = fromAccountId,
-                accountToId = toAccountId,
+                fromAccountId = fromAccountId,
+                toAccountId = toAccountId,
                 categoryId = categoryId
-            )
-            result.fold(
-                onSuccess = {
-                    _uiEvent.emit("Transaction added successfully")
-                },
-                onFailure = { err ->
-                    _uiEvent.emit(err.message ?: "Failed to add transaction")
-                }
             )
         }
     }
@@ -344,32 +353,24 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         newCategoryId: String?
     ) {
         viewModelScope.launch {
-            val result = repository.updateTransaction(
-                oldTransaction,
-                newType,
-                newAmount,
-                newDate,
-                newDateBs,
-                newName,
-                newNotes,
-                newAccountFromId,
-                newAccountToId,
-                newCategoryId
-            )
-            result.fold(
-                onSuccess = { _uiEvent.emit("Transaction updated") },
-                onFailure = { err -> _uiEvent.emit(err.message ?: "Update failed") }
+            transactionFeatureViewModel.updateTransaction(
+                oldTransaction = oldTransaction,
+                newType = newType,
+                newAmount = newAmount,
+                newDate = newDate,
+                newDateBs = newDateBs,
+                newName = newName,
+                newNotes = newNotes,
+                newAccountFromId = newAccountFromId,
+                newAccountToId = newAccountToId,
+                newCategoryId = newCategoryId
             )
         }
     }
 
     fun deleteTransaction(transaction: TransactionEntity) {
         viewModelScope.launch {
-            val result = repository.deleteTransaction(transaction)
-            result.fold(
-                onSuccess = { _uiEvent.emit("Transaction deleted") },
-                onFailure = { err -> _uiEvent.emit(err.message ?: "Delete failed") }
-            )
+            transactionFeatureViewModel.deleteTransaction(transaction)
         }
     }
 
@@ -377,33 +378,27 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun createAccount(name: String, type: AccountType, balance: Double, color: String, notes: String?) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            val acc = repository.createAccount(
+            accountFeatureViewModel.createAccount(
                 userId = userId,
                 name = name,
                 type = type,
-                initialBalance = balance,
+                balance = balance,
                 color = color,
                 currency = currencyState.value,
                 notes = notes
             )
-            _uiEvent.emit("Account '${acc.name}' created")
         }
     }
 
     fun updateAccount(account: Account) {
         viewModelScope.launch {
-            repository.updateAccount(account)
-            _uiEvent.emit("Account updated")
+            accountFeatureViewModel.updateAccount(account)
         }
     }
 
     fun deleteAccount(account: Account) {
         viewModelScope.launch {
-            val res = repository.deleteAccount(account)
-            res.fold(
-                onSuccess = { _uiEvent.emit("Account deleted") },
-                onFailure = { err -> _uiEvent.emit(err.message ?: "Cannot delete account") }
-            )
+            accountFeatureViewModel.deleteAccount(account)
         }
     }
 
@@ -411,8 +406,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun createCategory(name: String, type: CategoryType, icon: String? = null) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            repository.createCategory(userId, name, type, icon)
-            _uiEvent.emit("Category '$name' created")
+            budgetCategoryFeatureViewModel.createCategory(userId, name, type, icon)
         }
     }
 
@@ -430,30 +424,30 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     ) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            val res = repository.createLoan(
-                userId, counterparty, type, principal, rate, startDate, accountId, mode, frequency, notes
-            )
-            res.fold(
-                onSuccess = { _uiEvent.emit("Loan with $counterparty recorded") },
-                onFailure = { err -> _uiEvent.emit(err.message ?: "Failed to record loan") }
+            loanWishlistJournalFeatureViewModel.createLoan(
+                userId,
+                counterparty,
+                type,
+                principal,
+                rate,
+                startDate,
+                accountId,
+                mode,
+                frequency,
+                notes
             )
         }
     }
 
     fun markLoanRepaid(loan: Loan, accountId: String?) {
         viewModelScope.launch {
-            val res = repository.markLoanRepaid(loan, accountId)
-            res.fold(
-                onSuccess = { _uiEvent.emit("Loan with ${loan.counterparty} marked as repaid") },
-                onFailure = { err -> _uiEvent.emit(err.message ?: "Repayment failed") }
-            )
+            loanWishlistJournalFeatureViewModel.markLoanRepaid(loan, accountId)
         }
     }
 
     fun deleteLoan(loan: Loan) {
         viewModelScope.launch {
-            repository.deleteLoan(loan)
-            _uiEvent.emit("Loan deleted")
+            loanWishlistJournalFeatureViewModel.deleteLoan(loan)
         }
     }
 
@@ -461,15 +455,13 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun saveBudget(categoryId: String, monthlyLimit: Double, rollover: Boolean) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            repository.setBudget(userId, categoryId, monthlyLimit, rollover)
-            _uiEvent.emit("Budget updated")
+            budgetCategoryFeatureViewModel.saveBudget(userId, categoryId, monthlyLimit, rollover)
         }
     }
 
     fun deleteBudget(budget: Budget) {
         viewModelScope.launch {
-            repository.deleteBudget(budget)
-            _uiEvent.emit("Budget removed")
+            budgetCategoryFeatureViewModel.deleteBudget(budget)
         }
     }
 
@@ -484,30 +476,32 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     ) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            repository.createWishlistItem(userId, name, cost, preferredDate, priority, category, notes)
-            _uiEvent.emit("Wishlist item '$name' added")
+            loanWishlistJournalFeatureViewModel.saveWishlistItem(
+                userId,
+                name,
+                cost,
+                priority,
+                preferredDate,
+                category,
+                notes
+            )
         }
     }
 
     fun purchaseWishlistItem(item: WishlistItem, createExpense: Boolean, accountId: String?) {
         viewModelScope.launch {
-            val res = repository.purchaseWishlistItem(
+            loanWishlistJournalFeatureViewModel.purchaseWishlistItem(
                 item = item,
-                createTransaction = createExpense,
+                createExpense = createExpense,
                 accountId = accountId,
                 categoryId = _categories.value.firstOrNull { it.type == CategoryType.EXPENSE.name }?.id
-            )
-            res.fold(
-                onSuccess = { _uiEvent.emit("Purchased '${item.name}'") },
-                onFailure = { err -> _uiEvent.emit(err.message ?: "Purchase failed") }
             )
         }
     }
 
     fun deleteWishlistItem(item: WishlistItem) {
         viewModelScope.launch {
-            repository.deleteWishlistItem(item)
-            _uiEvent.emit("Wishlist item removed")
+            loanWishlistJournalFeatureViewModel.deleteWishlistItem(item)
         }
     }
 
@@ -515,82 +509,70 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun saveJournalEntry(content: String, mood: String?, date: Long) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            repository.createJournalEntry(userId, content, mood, date)
-            _uiEvent.emit("Journal entry saved")
+            loanWishlistJournalFeatureViewModel.saveJournalEntry(userId, content, mood, date)
         }
     }
 
     fun deleteJournalEntry(entry: JournalEntry) {
         viewModelScope.launch {
-            repository.deleteJournalEntry(entry)
-            _uiEvent.emit("Journal entry deleted")
+            loanWishlistJournalFeatureViewModel.deleteJournalEntry(entry)
         }
     }
 
     // --- SETTINGS ACTIONS ---
     fun setCurrency(currency: String) {
         viewModelScope.launch {
-            preferenceManager.setCurrency(currency)
-            _uiEvent.emit("Currency set to $currency")
+            authSettingsExportFeatureViewModel.setCurrency(currency)
         }
     }
 
     fun setThemeMode(mode: String) {
         viewModelScope.launch {
-            preferenceManager.setThemeMode(mode)
-            _uiEvent.emit("Theme updated")
+            authSettingsExportFeatureViewModel.setThemeMode(mode)
         }
     }
 
     fun setAllowNegativeBalance(allow: Boolean) {
         viewModelScope.launch {
-            preferenceManager.setAllowNegativeBalance(allow)
-            _uiEvent.emit(if (allow) "Negative balances permitted" else "Negative balances strictly prevented")
+            authSettingsExportFeatureViewModel.setAllowNegativeBalance(allow)
         }
     }
 
     fun recalculateBalances() {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            val res = repository.recalculateBalances(userId)
-            res.fold(
-                onSuccess = { _uiEvent.emit("Balances recalculated from transaction history") },
-                onFailure = { err -> _uiEvent.emit(err.message ?: "Recalculate failed") }
-            )
+            authSettingsExportFeatureViewModel.recalculateBalances(userId)
         }
     }
 
     // --- EXPORT & PDF ---
     fun generatePdfStatement(onPdfReady: (File) -> Unit) {
-        val app = getApplication<Application>()
         viewModelScope.launch {
-            val file = PdfExporter.generateStatementPdf(
-                context = app,
+            authSettingsExportFeatureViewModel.generatePdfStatement(
                 dashboardData = _dashboardData.value,
                 transactions = _transactions.value,
                 accounts = _accounts.value,
-                categories = _categories.value.associateBy { it.id },
-                currency = currencyState.value
+                categories = _categories.value,
+                currency = currencyState.value,
+                onPdfReady = onPdfReady
             )
-            onPdfReady(file)
-            _uiEvent.emit("PDF Statement generated: ${file.name}")
         }
     }
 
     suspend fun getExportJson(): String {
         val userId = _authState.value.currentUser?.id ?: return "{}"
-        return repository.exportFullJson(userId)
+        return authSettingsExportFeatureViewModel.exportJson(userId)
     }
 
     suspend fun getExportCsv(): String {
         val userId = _authState.value.currentUser?.id ?: return ""
-        return repository.exportTransactionsCsv(userId)
+        return authSettingsExportFeatureViewModel.exportCsv(userId)
     }
 
     fun importJson(json: String) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            val res = repository.importFullJson(userId, json)
+            val res = authSettingsExportFeatureViewModel.importJson(userId, json)
             res.fold(
                 onSuccess = { count ->
                     val txns = repository.getAllTransactions(userId)
@@ -603,9 +585,8 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                     refreshAllData(userId)
                     refreshDashboard(userId)
                     refreshWishlist(userId)
-                    _uiEvent.emit("Imported $count records from JSON")
                 },
-                onFailure = { err -> _uiEvent.emit("Import failed: ${err.message}") }
+                onFailure = { }
             )
         }
     }
@@ -613,7 +594,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun importCsv(csv: String) {
         val userId = _authState.value.currentUser?.id ?: return
         viewModelScope.launch {
-            val res = repository.importTransactionsCsv(userId, csv)
+            val res = authSettingsExportFeatureViewModel.importCsv(userId, csv)
             res.fold(
                 onSuccess = { count ->
                     val txns = repository.getAllTransactions(userId)
@@ -626,9 +607,8 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                     refreshAllData(userId)
                     refreshDashboard(userId)
                     refreshWishlist(userId)
-                    _uiEvent.emit("Imported $count transactions from CSV")
                 },
-                onFailure = { err -> _uiEvent.emit("CSV Import failed: ${err.message}") }
+                onFailure = { }
             )
         }
     }

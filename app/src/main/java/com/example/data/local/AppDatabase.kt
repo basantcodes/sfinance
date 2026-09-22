@@ -35,7 +35,7 @@ import com.example.data.local.entities.WishlistItem
         WishlistItem::class,
         JournalEntry::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -53,6 +53,12 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        private val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // No schema changes yet; keep the migration explicit so future releases can add real migration logic safely.
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -60,7 +66,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "personal_finance_journal.db"
                 )
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_1_2)
                     .build()
                 INSTANCE = instance
                 instance
