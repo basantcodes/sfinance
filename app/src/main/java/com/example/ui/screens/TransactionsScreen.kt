@@ -69,6 +69,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.data.local.entities.TransactionEntity
 import com.example.data.nepali.NepaliDateConverter
 import com.example.ui.components.NepaliDatePickerDialog
+import com.example.ui.components.EmptyStateCard
+import com.example.ui.components.FormFeedbackMessage
 import com.example.ui.components.TransactionTypeBadge
 import com.example.ui.components.formatAmount
 import com.example.ui.viewmodel.FinanceViewModel
@@ -304,17 +306,14 @@ fun TransactionsScreen(
                     .padding(32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "No transactions match your criteria.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    TextButton(onClick = onOpenAddTransaction) {
-                        Text("+ Add First Transaction", color = EmeraldPrimary, fontWeight = FontWeight.Bold)
-                    }
-                }
+                EmptyStateCard(
+                    title = "No transactions found",
+                    subtitle = "Try adjusting your filters or add a new transaction to get started.",
+                    actionLabel = "+ Add First Transaction",
+                    onAction = onOpenAddTransaction,
+                    icon = "🧾",
+                    accentColor = EmeraldPrimary
+                )
             }
         } else {
             LazyColumn(
@@ -745,13 +744,21 @@ fun TransactionRowCard(
     categoryName: String?,
     onClick: () -> Unit
 ) {
+    val balanceColor = when (transaction.type) {
+        "INCOME" -> Color(0xFF059669)
+        "EXPENSE" -> Color(0xFFEF4444)
+        "LEND" -> Color(0xFFD97706)
+        "BORROW" -> Color(0xFF9333EA)
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(14.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp, hoveredElevation = 3.dp, pressedElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -802,18 +809,19 @@ fun TransactionRowCard(
 
             Column(horizontalAlignment = Alignment.End) {
                 val isPositive = transaction.type == "INCOME" || transaction.type == "BORROW"
-                Text(
-                    text = "${if (isPositive) "+" else "-"}${formatAmount(transaction.amount, currency)}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = when (transaction.type) {
-                        "INCOME" -> Color(0xFF059669)
-                        "EXPENSE" -> Color(0xFFEF4444)
-                        "LEND" -> Color(0xFFD97706)
-                        "BORROW" -> Color(0xFF9333EA)
-                        else -> MaterialTheme.colorScheme.onSurface
-                    }
-                )
+                Surface(
+                    shape = RoundedCornerShape(999.dp),
+                    color = balanceColor.copy(alpha = 0.1f),
+                    tonalElevation = 0.dp
+                ) {
+                    Text(
+                        text = "${if (isPositive) "+" else "-"}${formatAmount(transaction.amount, currency)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = balanceColor,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
             }
         }
     }

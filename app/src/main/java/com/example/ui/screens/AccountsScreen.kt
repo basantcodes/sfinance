@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.ui.components.EmptyStateCard
 import com.example.data.local.entities.Account
 import com.example.ui.components.formatAmount
 import com.example.ui.theme.EmeraldPrimary
@@ -122,20 +123,14 @@ fun AccountsScreen(
 
             if (accounts.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("No accounts created yet.")
-                            Spacer(modifier = Modifier.height(10.dp))
-                            TextButton(onClick = onOpenAddAccount) {
-                                Text("+ Create Your First Account")
-                            }
-                        }
-                    }
+                    EmptyStateCard(
+                        title = "No accounts yet",
+                        subtitle = "Create your first account to start tracking balances, cash flow, and savings.",
+                        actionLabel = "+ Create First Account",
+                        onAction = onOpenAddAccount,
+                        icon = "🏦",
+                        accentColor = EmeraldPrimary
+                    )
                 }
             } else {
                 items(accounts, key = { it.id }) { acc ->

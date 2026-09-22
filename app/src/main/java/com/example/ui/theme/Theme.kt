@@ -15,38 +15,44 @@ private val DarkColorScheme = darkColorScheme(
     primary = EmeraldLight,
     onPrimary = Color.White,
     primaryContainer = EmeraldDark,
-    onPrimaryContainer = Color(0xFFA7F3D0),
+    onPrimaryContainer = Color(0xFFDBFCE7),
     secondary = TealAccent,
     onSecondary = Color.White,
     secondaryContainer = TealDark,
-    onSecondaryContainer = Color(0xFF99F6E4),
-    tertiary = Color(0xFFF59E0B),
+    onSecondaryContainer = Color(0xFFD6FFF8),
+    tertiary = Color(0xFFFBBF24),
     background = DarkBackground,
-    onBackground = Color(0xFFF1F5F9),
+    onBackground = Color(0xFFF3F4F6),
     surface = DarkSurface,
     onSurface = Color(0xFFF8FAFC),
     surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = Color(0xFFCBD5E1),
-    error = Color(0xFFF87171)
+    onSurfaceVariant = Color(0xFFD1D5DB),
+    outline = DarkOutline,
+    surfaceTint = EmeraldLight,
+    error = Color(0xFFF87171),
+    errorContainer = Color(0xFF7F1D1D)
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = EmeraldPrimary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD1FAE5),
+    primaryContainer = EmeraldSoft,
     onPrimaryContainer = EmeraldDark,
     secondary = TealAccent,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFCCFBF1),
+    secondaryContainer = TealSoft,
     onSecondaryContainer = TealDark,
-    tertiary = Color(0xFFD97706),
+    tertiary = Color(0xFFF59E0B),
     background = LightBackground,
     onBackground = Color(0xFF0F172A),
     surface = LightSurface,
-    onSurface = Color(0xFF0F172A),
+    onSurface = Color(0xFF111827),
     surfaceVariant = LightSurfaceVariant,
     onSurfaceVariant = Color(0xFF475569),
-    error = ColorExpense
+    outline = LightOutline,
+    surfaceTint = EmeraldPrimary,
+    error = ColorExpense,
+    errorContainer = DangerSoft
 )
 
 @Composable

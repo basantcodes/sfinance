@@ -55,6 +55,7 @@ import com.example.data.local.entities.Loan
 import com.example.data.local.entities.LoanStatus
 import com.example.data.local.entities.LoanType
 import com.example.data.nepali.NepaliDateConverter
+import com.example.ui.components.EmptyStateCard
 import com.example.ui.components.TransactionTypeBadge
 import com.example.ui.components.formatAmount
 import com.example.ui.dialogs.AccountPicker
@@ -154,22 +155,18 @@ fun LoansScreen(
 
             if (filteredLoans.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("No ${if (selectedTab == 0) "active" else "repaid"} loans found.")
-                            if (selectedTab == 0) {
-                                Spacer(modifier = Modifier.height(10.dp))
-                                TextButton(onClick = onOpenAddLoan) {
-                                    Text("+ Record New Loan")
-                                }
-                            }
-                        }
-                    }
+                    EmptyStateCard(
+                        title = "No ${if (selectedTab == 0) "active" else "repaid"} loans",
+                        subtitle = if (selectedTab == 0) {
+                            "Record money you lend or borrow so repayment dates and balances stay visible."
+                        } else {
+                            "Repaid loans will appear here as your history grows."
+                        },
+                        actionLabel = if (selectedTab == 0) "+ Record New Loan" else null,
+                        onAction = if (selectedTab == 0) onOpenAddLoan else null,
+                        icon = "🤝",
+                        accentColor = EmeraldPrimary
+                    )
                 }
             } else {
                 items(filteredLoans, key = { it.id }) { loan ->

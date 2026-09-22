@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.entities.TransactionEntity
 import com.example.data.nepali.NepaliDateConverter
 import com.example.ui.components.ExpensePieChart
+import com.example.ui.components.EmptyStateCard
 import com.example.ui.components.IncomeExpenseAreaChart
 import com.example.ui.components.TransactionTypeBadge
 import com.example.ui.components.formatAmount
@@ -100,65 +101,88 @@ fun DashboardScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Header with Dual Date & Month Selector (Cap gap to first card at 16px)
         item {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 Text(
                     text = "Today: $todayDualDate",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelLarge,
                     color = EmeraldPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = greetingTitle,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                // Period Navigator
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        IconButton(
+                            onClick = {
+                                if (month == 1) viewModel.setDashboardPeriod(year - 1, 12)
+                                else viewModel.setDashboardPeriod(year, month - 1)
+                            }
                         ) {
-                            IconButton(
-                                onClick = {
-                                    if (month == 1) viewModel.setDashboardPeriod(year - 1, 12)
-                                    else viewModel.setDashboardPeriod(year, month - 1)
-                                }
-                            ) {
-                                Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Previous Month", modifier = Modifier.size(16.dp))
-                            }
+                            Icon(
+                                Icons.Default.ArrowBackIosNew,
+                                contentDescription = "Previous Month",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "$monthName $year",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                tint = EmeraldPrimary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "$monthName $year",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
-                            IconButton(
-                                onClick = {
-                                    if (month == 12) viewModel.setDashboardPeriod(year + 1, 1)
-                                    else viewModel.setDashboardPeriod(year, month + 1)
-                                }
-                            ) {
-                                Icon(Icons.Default.ArrowForwardIos, contentDescription = "Next Month", modifier = Modifier.size(16.dp))
+                        IconButton(
+                            onClick = {
+                                if (month == 12) viewModel.setDashboardPeriod(year + 1, 1)
+                                else viewModel.setDashboardPeriod(year, month + 1)
                             }
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowForwardIos,
+                                contentDescription = "Next Month",
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
                     }
                 }
             }
+        }
 
             // CARD 1: Net Worth Overview Card
             item {
@@ -294,7 +318,7 @@ fun DashboardScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Savings Rate Progress
+                        val savingsProgress = (dashboardData.savingsRate.toFloat() / 100f).coerceIn(0f, 1f)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -314,12 +338,12 @@ fun DashboardScreen(
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         LinearProgressIndicator(
-                            progress = { (dashboardData.savingsRate.toFloat() / 100f).coerceIn(0f, 1f) },
+                            progress = { savingsProgress },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)),
-                            color = EmeraldPrimary,
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            color = if (dashboardData.savingsRate >= 0) EmeraldPrimary else Color(0xFFEF4444),
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
 
@@ -381,10 +405,13 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         if (dashboardData.budgetsWithProgress.isEmpty()) {
-                            Text(
-                                text = "No category budgets set for this month.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            EmptyStateCard(
+                                title = "No monthly budgets yet",
+                                subtitle = "Add category limits to turn this section into a live spending guide.",
+                                actionLabel = "Manage Budgets",
+                                onAction = onNavigateToBudgets,
+                                icon = "📊",
+                                accentColor = EmeraldPrimary
                             )
                         } else {
                             dashboardData.budgetsWithProgress.take(3).forEach { bp ->
@@ -484,11 +511,13 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         if (dashboardData.recentTransactions.isEmpty()) {
-                            Text(
-                                text = "No recent transactions found. Tap '+' to create one!",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = 8.dp)
+                            EmptyStateCard(
+                                title = "No recent activity",
+                                subtitle = "Add your first transaction and your dashboard will start telling the story.",
+                                actionLabel = "Add Transaction",
+                                onAction = onOpenAddTransaction,
+                                icon = "🧾",
+                                accentColor = EmeraldPrimary
                             )
                         } else {
                             dashboardData.recentTransactions.take(5).forEach { txn ->
@@ -544,28 +573,48 @@ fun FlowItem(
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(15.dp))
-            Spacer(modifier = Modifier.width(4.dp))
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.08f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 8.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = color.copy(alpha = 0.12f),
+                    tonalElevation = 0.dp
+                ) {
+                    Box(modifier = Modifier.padding(6.dp)) {
+                        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(12.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = amount,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = color,
                 maxLines = 1,
+                softWrap = false,
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = amount,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            color = color,
-            maxLines = 1,
-            softWrap = false,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }
 
@@ -575,10 +624,21 @@ fun RecentTransactionItem(
     currency: String,
     categoryName: String?
 ) {
+    val balanceColor = when (transaction.type) {
+        "INCOME" -> Color(0xFF059669)
+        "EXPENSE" -> Color(0xFFEF4444)
+        "LEND" -> Color(0xFFD97706)
+        "BORROW" -> Color(0xFF9333EA)
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
-        shape = RoundedCornerShape(12.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -608,18 +668,19 @@ fun RecentTransactionItem(
             }
 
             val isPositive = transaction.type == "INCOME" || transaction.type == "BORROW"
-            Text(
-                text = "${if (isPositive) "+" else "-"}${formatAmount(transaction.amount, currency)}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = when (transaction.type) {
-                    "INCOME" -> Color(0xFF059669)
-                    "EXPENSE" -> Color(0xFFEF4444)
-                    "LEND" -> Color(0xFFD97706)
-                    "BORROW" -> Color(0xFF9333EA)
-                    else -> MaterialTheme.colorScheme.onSurface
-                }
-            )
+            Surface(
+                shape = RoundedCornerShape(999.dp),
+                color = balanceColor.copy(alpha = 0.12f),
+                tonalElevation = 0.dp
+            ) {
+                Text(
+                    text = "${if (isPositive) "+" else "-"}${formatAmount(transaction.amount, currency)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = balanceColor,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                )
+            }
         }
     }
 }

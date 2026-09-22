@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.entities.JournalEntry
 import com.example.data.nepali.NepaliDateConverter
+import com.example.ui.components.EmptyStateCard
 import com.example.ui.components.getMoodEmoji
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.viewmodel.FinanceViewModel
@@ -76,24 +77,14 @@ fun JournalScreen(
 
             if (entries.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 50.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Your journal is empty.",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            TextButton(onClick = onOpenAddEntry) {
-                                Text("+ Write Your First Entry")
-                            }
-                        }
-                    }
+                    EmptyStateCard(
+                        title = "Your journal is ready",
+                        subtitle = "Capture a thought, a money win, or a lesson from today’s decisions.",
+                        actionLabel = "+ Write First Entry",
+                        onAction = onOpenAddEntry,
+                        icon = "📓",
+                        accentColor = EmeraldPrimary
+                    )
                 }
             } else {
                 items(entries, key = { it.id }) { entry ->

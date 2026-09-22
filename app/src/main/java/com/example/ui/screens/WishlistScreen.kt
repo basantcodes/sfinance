@@ -53,6 +53,7 @@ import com.example.data.local.entities.WishlistStatus
 import com.example.data.nepali.NepaliDateConverter
 import com.example.data.repository.WishlistItemWithAffordability
 import com.example.ui.components.AffordabilityBadge
+import com.example.ui.components.EmptyStateCard
 import com.example.ui.components.PriorityIndicator
 import com.example.ui.components.formatAmount
 import com.example.ui.dialogs.AccountPicker
@@ -151,20 +152,14 @@ fun WishlistScreen(
 
             if (filtered.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("No items found in this section.")
-                            Spacer(modifier = Modifier.height(10.dp))
-                            TextButton(onClick = onOpenAddWishlist) {
-                                Text("+ Add Item to Wishlist")
-                            }
-                        }
-                    }
+                    EmptyStateCard(
+                        title = "Your wishlist is clear",
+                        subtitle = "Add a goal to compare affordability and plan purchases with confidence.",
+                        actionLabel = "+ Add Wishlist Item",
+                        onAction = onOpenAddWishlist,
+                        icon = "🎯",
+                        accentColor = EmeraldPrimary
+                    )
                 }
             } else {
                 items(filtered, key = { it.item.id }) { itemAff ->

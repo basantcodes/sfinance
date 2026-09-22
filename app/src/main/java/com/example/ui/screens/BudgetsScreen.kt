@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.data.local.entities.Budget
 import com.example.data.repository.BudgetProgress
+import com.example.ui.components.EmptyStateCard
 import com.example.ui.components.formatAmount
 import com.example.ui.viewmodel.FinanceViewModel
 import java.util.Locale
@@ -112,20 +113,14 @@ fun BudgetsScreen(
 
             if (budgetsWithProgress.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("No category budgets configured yet.")
-                            Spacer(modifier = Modifier.height(10.dp))
-                            TextButton(onClick = onOpenAddBudget) {
-                                Text("+ Set Monthly Category Budget")
-                            }
-                        }
-                    }
+                    EmptyStateCard(
+                        title = "No budgets configured",
+                        subtitle = "Set category limits to see spending progress and stay ahead of your monthly plan.",
+                        actionLabel = "+ Set Monthly Budget",
+                        onAction = onOpenAddBudget,
+                        icon = "📊",
+                        accentColor = EmeraldPrimary
+                    )
                 }
             } else {
                 items(budgetsWithProgress) { bp ->
