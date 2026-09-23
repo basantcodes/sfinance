@@ -290,30 +290,30 @@ fun DashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        Row(
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             FlowItem(
                                 title = "Income",
                                 amount = formatAmount(dashboardData.monthlyIncome, currency),
                                 color = Color(0xFF059669),
                                 icon = Icons.AutoMirrored.Filled.TrendingUp,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.fillMaxWidth()
                             )
                             FlowItem(
                                 title = "Expenses",
                                 amount = formatAmount(dashboardData.monthlyExpenses, currency),
                                 color = Color(0xFFEF4444),
                                 icon = Icons.AutoMirrored.Filled.TrendingDown,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.fillMaxWidth()
                             )
                             FlowItem(
                                 title = "Saved",
                                 amount = formatAmount(dashboardData.monthlySaved, currency),
                                 color = if (dashboardData.monthlySaved >= 0) Color(0xFF0D9488) else Color(0xFFEF4444),
                                 icon = Icons.Default.Wallet,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
 
@@ -581,10 +581,11 @@ fun FlowItem(
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
@@ -605,10 +606,10 @@ fun FlowItem(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = amount,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = color,
                 maxLines = 1,
