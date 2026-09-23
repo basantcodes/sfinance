@@ -113,21 +113,21 @@ class FinanceRepository(
     private val journalDao = database.journalDao()
 
     // --- AUTH ---
-    suspend fun register(name: String, email: String, passwordPlain: String): Result<User> {
-        val trimmedEmail = email.trim().lowercase()
+    suspend fun register(name: String, username: String, passwordPlain: String): Result<User> {
+        val trimmedUsername = username.trim().lowercase()
         if (name.trim().length < 2) return Result.failure(Exception("Name must be at least 2 characters"))
-        if (!trimmedEmail.matches(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))) {
-            return Result.failure(Exception("Enter a valid email address"))
+        if (!trimmedUsername.matches(Regex("^\\S{3,64}$"))) {
+            return Result.failure(Exception("Username must be 3-64 characters without spaces"))
         }
         if (passwordPlain.length < 8) return Result.failure(Exception("Password must be at least 8 characters"))
-        val existing = userDao.getByEmail(trimmedEmail)
+        val existing = userDao.getByUsername(trimmedUsername)
         if (existing != null) {
-            return Result.failure(Exception("User with this email already exists"))
+            return Result.failure(Exception("That username is already in use"))
         }
         val hashedPassword = BCrypt.hashpw(passwordPlain)
         val user = User(
             name = name.trim(),
-            email = trimmedEmail,
+            username = trimmedUsername,
             password = hashedPassword
         )
         userDao.insert(user)
@@ -143,22 +143,22 @@ class FinanceRepository(
                 currency = "NPR"
             )
         )
-        val token = JwtHelper.createToken(user.id, user.email, user.name)
-        preferenceManager.saveAuthToken(token, user.id, user.email, user.name)
+        val token = JwtHelper.createToken(user.id, user.username, user.name)
+        preferenceManager.saveAuthToken(token, user.id, user.username, user.name)
         return Result.success(user)
     }
 
-    suspend fun login(email: String, passwordPlain: String): Result<User> {
-        val trimmedEmail = email.trim().lowercase()
-        if (!trimmedEmail.matches(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) || passwordPlain.isBlank()) {
-            return Result.failure(Exception("Enter a valid email and password"))
+    suspend fun login(username: String, passwordPlain: String): Result<User> {
+        val trimmedUsername = username.trim().lowercase()
+        if (!trimmedUsername.matches(Regex("^\\S{3,64}$")) || passwordPlain.isBlank()) {
+            return Result.failure(Exception("Enter a valid username and password"))
         }
-        val user = userDao.getByEmail(trimmedEmail) ?: return Result.failure(Exception("Invalid email or password"))
+        val user = userDao.getByUsername(trimmedUsername) ?: return Result.failure(Exception("Invalid username or password"))
         if (!BCrypt.checkpw(passwordPlain, user.password)) {
-            return Result.failure(Exception("Invalid email or password"))
+            return Result.failure(Exception("Invalid username or password"))
         }
-        val token = JwtHelper.createToken(user.id, user.email, user.name)
-        preferenceManager.saveAuthToken(token, user.id, user.email, user.name)
+        val token = JwtHelper.createToken(user.id, user.username, user.name)
+        preferenceManager.saveAuthToken(token, user.id, user.username, user.name)
         return Result.success(user)
     }
 
@@ -1129,7 +1129,7 @@ class FinanceRepository(
         root.put("backupId", UUID.randomUUID().toString())
         root.put("user", JSONObject().apply {
             put("name", user.name)
-            put("email", user.email)
+            put("username", user.username)
         })
 
         val accountsArr = JSONArray()
@@ -1268,19 +1268,19 @@ class FinanceRepository(
         var count = 0
 
         database.withTransaction {
-            // 1. Users (if present, update active user's name/email)
+            // 1. Users (if present, update the active user's name/username)
             val usersArr = root.optJSONArray("users")
             val userObj = root.optJSONObject("user") ?: usersArr?.takeIf { it.length() > 0 }?.getJSONObject(0)
             if (userObj != null) {
                 val impName = userObj.optString("name").trim()
-                val impEmail = userObj.optString("email").trim()
-                if (impName.isNotBlank() || impEmail.isNotBlank()) {
+                val impUsername = userObj.optString("username", userObj.optString("email")).trim().lowercase()
+                if (impName.isNotBlank() || impUsername.isNotBlank()) {
                     val current = userDao.getById(userId)
                     if (current != null) {
                         userDao.update(
                             current.copy(
                                 name = if (impName.isNotBlank()) impName else current.name,
-                                email = if (impEmail.isNotBlank()) impEmail else current.email
+                                username = if (impUsername.isNotBlank()) impUsername else current.username
                             )
                         )
                     }

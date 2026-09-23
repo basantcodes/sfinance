@@ -14,8 +14,8 @@ class AuthSettingsExportFeatureViewModel(
     private val preferenceManager: PreferenceManager,
     private val emitEvent: (String) -> Unit = {}
 ) {
-    suspend fun login(email: String, password: String): Result<User> {
-        val result = repository.login(email, password)
+    suspend fun login(username: String, password: String): Result<User> {
+        val result = repository.login(username, password)
         result.fold(
             onSuccess = { emitEvent("Logged in as ${it.name}") },
             onFailure = { err -> emitEvent(err.message ?: "Login failed") }
@@ -23,8 +23,8 @@ class AuthSettingsExportFeatureViewModel(
         return result
     }
 
-    suspend fun register(name: String, email: String, password: String): Result<User> {
-        val result = repository.register(name, email, password)
+    suspend fun register(name: String, username: String, password: String): Result<User> {
+        val result = repository.register(name, username, password)
         result.fold(
             onSuccess = { emitEvent("Account created for ${it.name}") },
             onFailure = { err -> emitEvent(err.message ?: "Registration failed") }

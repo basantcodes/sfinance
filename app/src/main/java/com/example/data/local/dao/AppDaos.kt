@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
-    @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
-    suspend fun getByEmail(email: String): User?
+    @Query("SELECT * FROM users WHERE username = :username LIMIT 1")
+    suspend fun getByUsername(username: String): User?
 
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): User?

@@ -35,7 +35,7 @@ import com.example.data.local.entities.WishlistItem
         WishlistItem::class,
         JournalEntry::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -54,22 +54,30 @@ abstract class AppDatabase : RoomDatabase() {
         private var INSTANCE: AppDatabase? = null
 
         private val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
-            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                 // No schema changes yet; keep the migration explicit so future releases can add real migration logic safely.
             }
         }
 
         private val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
-            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE transactions ADD COLUMN relatedTransactionId TEXT")
-                database.execSQL("ALTER TABLE transactions ADD COLUMN feeAmount REAL NOT NULL DEFAULT 0.0")
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN relatedTransactionId TEXT")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN feeAmount REAL NOT NULL DEFAULT 0.0")
             }
         }
 
         private val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
-            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE loans ADD COLUMN remainingAmount REAL NOT NULL DEFAULT 0.0")
-                database.execSQL("UPDATE loans SET remainingAmount = principal WHERE remainingAmount = 0.0")
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE loans ADD COLUMN remainingAmount REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("UPDATE loans SET remainingAmount = principal WHERE remainingAmount = 0.0")
+            }
+        }
+
+        private val MIGRATION_4_5 = object : androidx.room.migration.Migration(4, 5) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("DROP INDEX IF EXISTS index_users_email")
+                db.execSQL("ALTER TABLE users RENAME COLUMN email TO username")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_users_username ON users(username)")
             }
         }
 
@@ -80,7 +88,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "personal_finance_journal.db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance

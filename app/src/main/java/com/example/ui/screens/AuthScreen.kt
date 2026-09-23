@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
@@ -62,19 +61,19 @@ import com.example.ui.components.FormFeedbackMessage
 fun AuthScreen(
     isLoading: Boolean,
     errorMessage: String?,
-    onLogin: (email: String, pass: String) -> Unit,
-    onRegister: (name: String, email: String, pass: String) -> Unit
+    onLogin: (username: String, pass: String) -> Unit,
+    onRegister: (name: String, username: String, pass: String) -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0 = Login, 1 = Register
 
     var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var validationMessage by remember { mutableStateOf<String?>(null) }
 
-    val emailIsValid = email.trim().matches(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
-    val formIsValid = emailIsValid && password.length >= 8 && (selectedTab == 0 || name.trim().length >= 2)
+    val usernameIsValid = username.trim().matches(Regex("^\\S{3,64}$"))
+    val formIsValid = usernameIsValid && password.length >= 8 && (selectedTab == 0 || name.trim().length >= 2)
 
     Box(
         modifier = Modifier
@@ -169,14 +168,14 @@ fun AuthScreen(
                 }
 
                 OutlinedTextField(
-                    value = email,
+                    value = username,
                     onValueChange = {
-                        email = it
+                        username = it
                         validationMessage = null
                     },
-                    label = { Text("Email Address") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    label = { Text("Username") },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -252,16 +251,16 @@ fun AuthScreen(
                             if (!formIsValid) {
                                 validationMessage = when {
                                     selectedTab == 1 && name.trim().length < 2 -> "Enter your full name"
-                                    !emailIsValid -> "Enter a valid email address"
+                                    !usernameIsValid -> "Username must be 3-64 characters without spaces"
                                     password.length < 8 -> "Password must be at least 8 characters"
                                     else -> "Please check your details"
                                 }
                                 return@Button
                             }
                             if (selectedTab == 0) {
-                                onLogin(email, password)
+                                onLogin(username, password)
                             } else {
-                                onRegister(name, email, password)
+                                onRegister(name, username, password)
                             }
                         },
                         modifier = Modifier

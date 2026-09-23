@@ -273,10 +273,10 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
 
 
     // --- AUTH ACTIONS ---
-    fun login(email: String, pass: String) {
+    fun login(username: String, pass: String) {
         viewModelScope.launch {
             _authState.value = _authState.value.copy(isLoading = true, error = null)
-            val result = authSettingsExportFeatureViewModel.login(email, pass)
+            val result = authSettingsExportFeatureViewModel.login(username, pass)
             result.fold(
                 onSuccess = { user ->
                     _authState.value = AuthUiState(isAuthenticated = true, currentUser = user, isLoading = false)
@@ -289,10 +289,10 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun register(name: String, email: String, pass: String) {
+    fun register(name: String, username: String, pass: String) {
         viewModelScope.launch {
             _authState.value = _authState.value.copy(isLoading = true, error = null)
-            val result = authSettingsExportFeatureViewModel.register(name, email, pass)
+            val result = authSettingsExportFeatureViewModel.register(name, username, pass)
             result.fold(
                 onSuccess = { user ->
                     _authState.value = AuthUiState(isAuthenticated = true, currentUser = user, isLoading = false)

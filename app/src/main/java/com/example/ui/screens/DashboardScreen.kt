@@ -17,15 +17,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Savings
-import androidx.compose.material.icons.filled.TrendingDown
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -175,7 +175,7 @@ fun DashboardScreen(
                             }
                         ) {
                             Icon(
-                                Icons.Default.ArrowForwardIos,
+                                Icons.AutoMirrored.Filled.ArrowForwardIos,
                                 contentDescription = "Next Month",
                                 modifier = Modifier.size(16.dp)
                             )
@@ -298,14 +298,14 @@ fun DashboardScreen(
                                 title = "Income",
                                 amount = formatAmount(dashboardData.monthlyIncome, currency),
                                 color = Color(0xFF059669),
-                                icon = Icons.Default.TrendingUp,
+                                icon = Icons.AutoMirrored.Filled.TrendingUp,
                                 modifier = Modifier.weight(1f)
                             )
                             FlowItem(
                                 title = "Expenses",
                                 amount = formatAmount(dashboardData.monthlyExpenses, currency),
                                 color = Color(0xFFEF4444),
-                                icon = Icons.Default.TrendingDown,
+                                icon = Icons.AutoMirrored.Filled.TrendingDown,
                                 modifier = Modifier.weight(1f)
                             )
                             FlowItem(

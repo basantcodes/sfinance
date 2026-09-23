@@ -38,7 +38,7 @@ class PreferenceManager(private val context: Context) {
     companion object {
         private const val KEY_JWT_TOKEN = "jwt_token"
         private const val KEY_ACTIVE_USER_ID = "active_user_id"
-        private const val KEY_ACTIVE_USER_EMAIL = "active_user_email"
+        private const val KEY_ACTIVE_USERNAME = "active_username"
         private const val KEY_ACTIVE_USER_NAME = "active_user_name"
 
         val PREF_CURRENCY = stringPreferencesKey("app_currency")
@@ -46,18 +46,18 @@ class PreferenceManager(private val context: Context) {
         val PREF_ALLOW_NEGATIVE_BALANCE = booleanPreferencesKey("allow_negative_balance")
     }
 
-    fun saveAuthToken(token: String, userId: String, email: String, name: String) {
+    fun saveAuthToken(token: String, userId: String, username: String, name: String) {
         encryptedPrefs.edit()
             .putString(KEY_JWT_TOKEN, token)
             .putString(KEY_ACTIVE_USER_ID, userId)
-            .putString(KEY_ACTIVE_USER_EMAIL, email)
+            .putString(KEY_ACTIVE_USERNAME, username)
             .putString(KEY_ACTIVE_USER_NAME, name)
             .apply()
     }
 
     fun getAuthToken(): String? = encryptedPrefs.getString(KEY_JWT_TOKEN, null)
     fun getActiveUserId(): String? = encryptedPrefs.getString(KEY_ACTIVE_USER_ID, null)
-    fun getActiveUserEmail(): String? = encryptedPrefs.getString(KEY_ACTIVE_USER_EMAIL, null)
+    fun getActiveUsername(): String? = encryptedPrefs.getString(KEY_ACTIVE_USERNAME, null)
     fun getActiveUserName(): String? = encryptedPrefs.getString(KEY_ACTIVE_USER_NAME, null)
 
     fun clearAuth() {

@@ -12,16 +12,19 @@ object JwtHelper {
 
     data class JwtPayload(
         val userId: String,
-        val email: String,
+        val username: String,
         val name: String,
         val issuedAt: Long,
         val expiresAt: Long
     ) {
+        val email: String
+            get() = username
+
         val isExpired: Boolean
             get() = System.currentTimeMillis() > expiresAt
     }
 
-    fun createToken(userId: String, email: String, name: String): String {
+    fun createToken(userId: String, username: String, name: String): String {
         val now = System.currentTimeMillis()
         val exp = now + THIRTY_DAYS_MILLIS
 
@@ -32,7 +35,7 @@ object JwtHelper {
 
         val payloadJson = JSONObject().apply {
             put("userId", userId)
-            put("email", email)
+            put("username", username)
             put("name", name)
             put("iat", now)
             put("exp", exp)
@@ -63,7 +66,7 @@ object JwtHelper {
 
             return JwtPayload(
                 userId = payloadJson.getString("userId"),
-                email = payloadJson.getString("email"),
+                username = payloadJson.optString("username", payloadJson.optString("email")),
                 name = payloadJson.optString("name", "User"),
                 issuedAt = payloadJson.optLong("iat", 0L),
                 expiresAt = exp

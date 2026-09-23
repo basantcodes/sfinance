@@ -13,6 +13,6 @@ visual
 
  done Improve spacing and hierarchy across screens by using a more consistent spacing scale, stronger typography contrast, and clearer section headers so the app feels more premium and easier to scan.
 done Add richer material states for buttons, cards, and inputs: hover/focus/pressed feedback, elevation changes, subtle shadows, and pressed color transitions to make the interface feel responsive and polished.
-Refresh the dashboard and transaction cards with better visual grouping, color-coded balance states, progress bars, and compact charts that make financial data easier to read at a glance.
-Introduce a cleaner light/dark theme system with stronger brand colors, softer surfaces, and a more consistent accent palette, so the app feels intentional across all screens and devices.
+done Refresh the dashboard and transaction cards with better visual grouping, color-coded balance states, progress bars, and compact charts that make financial data easier to read at a glance.
+done Introduce a cleaner light/dark theme system with stronger brand colors, softer surfaces, and a more consistent accent palette, so the app feels intentional across all screens and devices.
 Improve empty states, loading states, and form feedback with illustrations, skeleton placeholders, inline validation, and clearer success/error messaging to reduce confusion and make the app feel more trustworthy.

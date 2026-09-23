@@ -47,12 +47,12 @@ enum class Mood {
 
 @Entity(
     tableName = "users",
-    indices = [Index(value = ["email"], unique = true)]
+    indices = [Index(value = ["username"], unique = true)]
 )
 data class User(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val name: String,
-    val email: String,
+    val username: String,
     val password: String, // bcrypt hash
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

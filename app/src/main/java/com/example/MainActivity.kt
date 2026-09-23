@@ -28,6 +28,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoStories
@@ -35,10 +37,8 @@ import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Handshake
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PieChart
-import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -138,8 +138,8 @@ class MainActivity : ComponentActivity() {
                     AuthScreen(
                         isLoading = authState.isLoading,
                         errorMessage = authState.error,
-                        onLogin = { email, pass -> viewModel.login(email, pass) },
-                        onRegister = { name, email, pass -> viewModel.register(name, email, pass) }
+                        onLogin = { username, pass -> viewModel.login(username, pass) },
+                        onRegister = { name, username, pass -> viewModel.register(name, username, pass) }
                     )
                 } else {
                     MainAppScaffold(
@@ -213,7 +213,7 @@ fun MainAppScaffold(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Logout,
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = null,
                             tint = Color(0xFFEF4444),
                             modifier = Modifier.size(26.dp)
@@ -380,7 +380,7 @@ fun MainAppScaffold(
                 ) {
                     val tabs = listOf(
                         Triple(AppScreen.DASHBOARD, Icons.Default.Dashboard, "Dash"),
-                        Triple(AppScreen.TRANSACTIONS, Icons.Default.ReceiptLong, "Txns"),
+                        Triple(AppScreen.TRANSACTIONS, Icons.AutoMirrored.Filled.ReceiptLong, "Txns"),
                         Triple(AppScreen.ACCOUNTS, Icons.Default.AccountBalance, "Accounts"),
                         Triple(AppScreen.BUDGETS, Icons.Default.PieChart, "Budget"),
                         Triple(null, Icons.Default.Menu, "More")
@@ -564,7 +564,7 @@ fun MainAppScaffold(
 
                 // 5. Logout shortcut
                 MoreSheetItem(
-                    icon = Icons.Default.Logout,
+                    icon = Icons.AutoMirrored.Filled.Logout,
                     iconBgColor = Color(0xFFFEE2E2),
                     iconTint = Color(0xFFEF4444),
                     title = "Sign Out",
