@@ -321,7 +321,7 @@
     <string name="copy_share">Copy &amp; Share</string>
     <string name="import_json_backup">Import JSON Backup</string>
     <string name="paste_json">Paste JSON backup content to import records:</string>
-    <string name="import">Import</string>
+    <string name="import_action">Import</string>
     <string name="exported_csv">Exported Transactions CSV</string>
     <string name="copy_share_csv">Copy or share your CSV export:</string>
     <string name="import_csv_backup">Import Transactions CSV</string>

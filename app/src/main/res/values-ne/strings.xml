@@ -321,7 +321,7 @@
     <string name="copy_share">कपी तथा साझा गर्नुहोस्</string>
     <string name="import_json_backup">JSON ब्याकअप आयात</string>
     <string name="paste_json">रेकर्ड आयात गर्न JSON ब्याकअप टाँस्नुहोस्:</string>
-    <string name="import">आयात</string>
+    <string name="import_action">आयात</string>
     <string name="exported_csv">निर्यात गरिएको कारोबार CSV</string>
     <string name="copy_share_csv">CSV निर्यात कपी वा साझा गर्नुहोस्:</string>
     <string name="import_csv_backup">कारोबार CSV आयात</string>

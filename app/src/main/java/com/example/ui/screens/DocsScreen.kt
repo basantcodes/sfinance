@@ -934,7 +934,7 @@ fun DocsScreen(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {
-                    Text(stringResource(com.example.R.string.import))
+                    Text(stringResource(com.example.R.string.import_action))
                 }
             },
             dismissButton = {
