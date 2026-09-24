@@ -327,7 +327,7 @@ fun MainAppScaffold(
                             AppScreen.LOANS -> "Loans & Debt"
                             AppScreen.WISHLIST -> "Wishlist"
                             AppScreen.JOURNAL -> "Journal"
-                            AppScreen.DOCS -> "Docs & Settings"
+                            AppScreen.DOCS -> "Settings"
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -546,12 +546,12 @@ fun MainAppScaffold(
                     }
                 )
 
-                // 4. Docs & Settings
+                // 4. Settings
                 MoreSheetItem(
                     icon = Icons.Default.Description,
                     iconBgColor = Color(0xFFCCFBF1),
                     iconTint = Color(0xFF0D9488),
-                    title = "Docs & Data",
+                    title = "Settings",
                     subtitle = "PDF statements, JSON/CSV backups & settings",
                     isSelected = currentScreen == AppScreen.DOCS,
                     onClick = {

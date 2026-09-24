@@ -201,7 +201,7 @@ fun DocsScreen(
         item {
             Column {
                 Text(
-                    text = "Docs & Data",
+                    text = "Settings",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )

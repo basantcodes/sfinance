@@ -466,15 +466,15 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Text("Total Lent", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD97706))
+                                Text("You'll receive", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD97706))
                                 Text(formatAmount(dashboardData.totalLent, currency), fontWeight = FontWeight.Bold)
                             }
                             Column {
-                                Text("Total Borrowed", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9333EA))
+                                Text("You'll pay", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9333EA))
                                 Text(formatAmount(dashboardData.totalBorrowed, currency), fontWeight = FontWeight.Bold)
                             }
                             Column {
-                                Text("Net Receivable", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Net", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
                                     formatAmount(dashboardData.netReceivable, currency),
                                     fontWeight = FontWeight.Bold,

@@ -80,8 +80,8 @@ fun LoansScreen(
     val filteredLoans = loans.filter { it.status == currentStatus }
 
     val activeLoans = loans.filter { it.status == LoanStatus.ACTIVE.name }
-    val totalLent = activeLoans.filter { it.type == LoanType.LEND.name }.sumOf { it.principal }
-    val totalBorrowed = activeLoans.filter { it.type == LoanType.BORROW.name }.sumOf { it.principal }
+    val totalLent = activeLoans.filter { it.type == LoanType.LEND.name }.sumOf { it.remainingAmount }
+    val totalBorrowed = activeLoans.filter { it.type == LoanType.BORROW.name }.sumOf { it.remainingAmount }
     val netReceivable = totalLent - totalBorrowed
 
     var loanToRepay by remember { mutableStateOf<Loan?>(null) }
@@ -112,24 +112,24 @@ fun LoansScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column {
-                                Text("Total Lent", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD97706))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("You'll receive", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD97706))
                                 Text(formatAmount(totalLent, currency), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             }
-                            Column {
-                                Text("Total Borrowed", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9333EA))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("You'll pay", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9333EA))
                                 Text(formatAmount(totalBorrowed, currency), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("Net Position", style = MaterialTheme.typography.labelSmall)
+                                Text("Net", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
                                     formatAmount(netReceivable, currency),
                                     style = MaterialTheme.typography.titleMedium,
@@ -372,12 +372,18 @@ fun LoanCardItem(
                 }
 
                 Text(
-                    text = formatAmount(loan.principal, currency),
+                    text = formatAmount(loan.remainingAmount, currency),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
                     color = if (isLend) Color(0xFFD97706) else Color(0xFF9333EA)
                 )
             }
+
+            Text(
+                text = "Outstanding balance${if (loan.remainingAmount != loan.principal) " • Principal ${formatAmount(loan.principal, currency)}" else ""}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 

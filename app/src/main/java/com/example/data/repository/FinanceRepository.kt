@@ -940,8 +940,8 @@ class FinanceRepository(
         val totalInvestments = accounts.filter { it.type.equals(AccountType.INVESTMENT.name, ignoreCase = true) }.sumOf { it.balance }
 
         val activeLoans = loans.filter { it.status.equals(LoanStatus.ACTIVE.name, ignoreCase = true) }
-        val totalLent = activeLoans.filter { it.type.equals(LoanType.LEND.name, ignoreCase = true) }.sumOf { it.principal }
-        val totalBorrowed = activeLoans.filter { it.type.equals(LoanType.BORROW.name, ignoreCase = true) }.sumOf { it.principal }
+        val totalLent = activeLoans.filter { it.type.equals(LoanType.LEND.name, ignoreCase = true) }.sumOf { it.remainingAmount }
+        val totalBorrowed = activeLoans.filter { it.type.equals(LoanType.BORROW.name, ignoreCase = true) }.sumOf { it.remainingAmount }
         val netReceivable = totalLent - totalBorrowed
 
         // Transactions strictly for currently selected (year, monthIndex)

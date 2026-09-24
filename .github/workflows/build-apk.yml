@@ -32,33 +32,31 @@ jobs:
             echo "GRADLE_CMD=gradle" >> "$GITHUB_ENV"
           fi
 
-      - name: Create Android debug keystore
+      - name: Restore release keystore
         shell: bash
         run: |
-          if [ ! -f "$GITHUB_WORKSPACE/debug.keystore" ]; then
-            keytool -genkeypair \
-              -v \
-              -keystore "$GITHUB_WORKSPACE/debug.keystore" \
-              -storepass android \
-              -alias androiddebugkey \
-              -keypass android \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -dname "CN=Android Debug,O=Android,C=US"
-          fi
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || {
+            echo "ANDROID_KEYSTORE_BASE64 is required for update-compatible APKs."
+            exit 1
+          }
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$GITHUB_WORKSPACE/release.keystore"
 
-      - name: Build Debug APK
+      - name: Build signed release APK
         shell: bash
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ "$GRADLE_CMD" = "./gradlew" ]; then
-            ./gradlew assembleDebug
+            ./gradlew assembleRelease -PversionCode="$((GITHUB_RUN_NUMBER + 1))" -PversionName="1.0.${GITHUB_RUN_NUMBER}"
           else
-            gradle assembleDebug
+            gradle assembleRelease -PversionCode="$((GITHUB_RUN_NUMBER + 1))" -PversionName="1.0.${GITHUB_RUN_NUMBER}"
           fi
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: app-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
