@@ -67,8 +67,15 @@ jobs:
           name: app-release-apk
           path: app/build/outputs/apk/release/app-release.apk
 
-      - name: Print APK identity
+      - name: Print release signing identity
         shell: bash
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           echo "Package: com.aistudio.applet.eafovh"
-          keytool -printcert -jarfile app/build/outputs/apk/release/app-release.apk | grep -E 'Owner:|SHA256:'
+          keytool -list -v \
+            -keystore "$KEYSTORE_PATH" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS" | grep -E 'Owner:|SHA256:'
