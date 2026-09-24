@@ -35,10 +35,16 @@ jobs:
       - name: Restore release keystore
         shell: bash
         run: |
-          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || {
-            echo "ANDROID_KEYSTORE_BASE64 is required for update-compatible APKs."
+          missing=""
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || missing="$missing ANDROID_KEYSTORE_BASE64"
+          test -n "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" || missing="$missing ANDROID_KEYSTORE_PASSWORD"
+          test -n "${{ secrets.ANDROID_KEY_ALIAS }}" || missing="$missing ANDROID_KEY_ALIAS"
+          test -n "${{ secrets.ANDROID_KEY_PASSWORD }}" || missing="$missing ANDROID_KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "Missing GitHub Actions secrets:$missing"
+            echo "Add them under Settings > Secrets and variables > Actions before building release APKs."
             exit 1
-          }
+          fi
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$GITHUB_WORKSPACE/release.keystore"
 
       - name: Build signed release APK
