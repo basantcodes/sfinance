@@ -2,6 +2,7 @@ package com.example.ui.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.example.R
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
 import com.example.data.local.entities.Account
@@ -52,19 +53,19 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     val preferenceManager = PreferenceManager(application)
     val repository = FinanceRepository(database, preferenceManager)
 
-    private val accountFeatureViewModel = AccountFeatureViewModel(repository) { msg ->
+    private val accountFeatureViewModel = AccountFeatureViewModel(application, repository) { msg ->
         viewModelScope.launch { _uiEvent.emit(msg) }
     }
 
-    private val transactionFeatureViewModel = TransactionFeatureViewModel(repository) { msg ->
+    private val transactionFeatureViewModel = TransactionFeatureViewModel(application, repository) { msg ->
         viewModelScope.launch { _uiEvent.emit(msg) }
     }
 
-    private val budgetCategoryFeatureViewModel = BudgetCategoryFeatureViewModel(repository) { msg ->
+    private val budgetCategoryFeatureViewModel = BudgetCategoryFeatureViewModel(application, repository) { msg ->
         viewModelScope.launch { _uiEvent.emit(msg) }
     }
 
-    private val loanWishlistJournalFeatureViewModel = LoanWishlistJournalFeatureViewModel(repository) { msg ->
+    private val loanWishlistJournalFeatureViewModel = LoanWishlistJournalFeatureViewModel(application, repository) { msg ->
         viewModelScope.launch { _uiEvent.emit(msg) }
     }
 
@@ -89,6 +90,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
 
     val allowNegativeBalanceState: StateFlow<Boolean> = preferenceManager.allowNegativeBalanceFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val languageState: StateFlow<String> = preferenceManager.languageFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), preferenceManager.getLanguage())
 
     // Dashboard
     private val _dashboardYear = MutableStateFlow(Calendar.getInstance().get(Calendar.YEAR))
@@ -308,7 +312,13 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun logout() {
         repository.logout()
         _authState.value = AuthUiState(isAuthenticated = false, isLoading = false)
-        viewModelScope.launch { _uiEvent.emit("Signed out") }
+        viewModelScope.launch { _uiEvent.emit(getApplication<Application>().getString(R.string.signed_out)) }
+    }
+
+    fun setLanguage(language: String) {
+        viewModelScope.launch {
+            authSettingsExportFeatureViewModel.setLanguage(language)
+        }
     }
 
     // --- TRANSACTION ACTIONS ---

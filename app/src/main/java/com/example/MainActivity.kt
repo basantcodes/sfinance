@@ -1,6 +1,8 @@
 package com.example
 
 import android.app.Activity
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -77,6 +79,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -85,6 +88,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import java.util.Calendar
+import java.util.Locale
 import com.example.data.local.entities.Account
 import com.example.data.local.entities.Budget
 import com.example.data.local.entities.JournalEntry
@@ -117,6 +121,20 @@ import kotlinx.coroutines.flow.collectLatest
 class MainActivity : ComponentActivity() {
 
     private val viewModel: FinanceViewModel by viewModels()
+
+    override fun attachBaseContext(newBase: Context) {
+        val language = newBase.getSharedPreferences("app_settings_sync", Context.MODE_PRIVATE)
+            .getString("app_language", null)
+            ?.takeIf { it == "en" || it == "ne" }
+            ?: if (Locale.getDefault().language == "ne") "ne" else "en"
+        val locale = if (language == "ne") Locale("ne", "NP") else Locale.ENGLISH
+        Locale.setDefault(locale)
+        val configuration = Configuration(newBase.resources.configuration).apply {
+            setLocale(locale)
+            setLocales(android.os.LocaleList(locale))
+        }
+        super.attachBaseContext(newBase.createConfigurationContext(configuration))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -221,14 +239,14 @@ fun MainAppScaffold(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Exit app?",
+                        text = stringResource(com.example.R.string.exit_app),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Are you sure you want to exit Finance Journal?",
+                        text = stringResource(com.example.R.string.exit_confirmation),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -245,7 +263,7 @@ fun MainAppScaffold(
                                 .height(46.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Cancel", fontWeight = FontWeight.Medium)
+                            Text(stringResource(com.example.R.string.cancel), fontWeight = FontWeight.Medium)
                         }
                         Button(
                             onClick = {
@@ -258,7 +276,7 @@ fun MainAppScaffold(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
                         ) {
-                            Text("Exit", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(stringResource(com.example.R.string.exit), color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -280,10 +298,10 @@ fun MainAppScaffold(
     val authState by viewModel.authState.collectAsState()
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     val greeting = when (currentHour) {
-        in 5..11 -> "Good morning"
-        in 12..16 -> "Good afternoon"
-        in 17..20 -> "Good evening"
-        else -> "Good night"
+        in 5..11 -> stringResource(com.example.R.string.good_morning)
+        in 12..16 -> stringResource(com.example.R.string.good_afternoon)
+        in 17..20 -> stringResource(com.example.R.string.good_evening)
+        else -> stringResource(com.example.R.string.good_night)
     }
     val userName = authState.currentUser?.name?.trim()?.ifBlank { null } ?: "there"
     val greetingTitle = "$greeting, $userName"
@@ -312,7 +330,7 @@ fun MainAppScaffold(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(com.example.R.string.back),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -321,13 +339,13 @@ fun MainAppScaffold(
                     Text(
                         text = when (currentScreen) {
                             AppScreen.DASHBOARD -> greetingTitle
-                            AppScreen.TRANSACTIONS -> "Transactions"
-                            AppScreen.ACCOUNTS -> "Accounts"
-                            AppScreen.BUDGETS -> "Budgets"
-                            AppScreen.LOANS -> "Loans & Debt"
-                            AppScreen.WISHLIST -> "Wishlist"
-                            AppScreen.JOURNAL -> "Journal"
-                            AppScreen.DOCS -> "Settings"
+                            AppScreen.TRANSACTIONS -> stringResource(com.example.R.string.transactions)
+                            AppScreen.ACCOUNTS -> stringResource(com.example.R.string.accounts)
+                            AppScreen.BUDGETS -> stringResource(com.example.R.string.budgets)
+                            AppScreen.LOANS -> stringResource(com.example.R.string.loans_debt)
+                            AppScreen.WISHLIST -> stringResource(com.example.R.string.wishlist)
+                            AppScreen.JOURNAL -> stringResource(com.example.R.string.journal)
+                            AppScreen.DOCS -> stringResource(com.example.R.string.settings)
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -358,7 +376,7 @@ fun MainAppScaffold(
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
                     modifier = Modifier.padding(bottom = 12.dp, end = 4.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(com.example.R.string.add))
                 }
             }
         },
@@ -379,11 +397,11 @@ fun MainAppScaffold(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val tabs = listOf(
-                        Triple(AppScreen.DASHBOARD, Icons.Default.Dashboard, "Dash"),
-                        Triple(AppScreen.TRANSACTIONS, Icons.AutoMirrored.Filled.ReceiptLong, "Txns"),
-                        Triple(AppScreen.ACCOUNTS, Icons.Default.AccountBalance, "Accounts"),
-                        Triple(AppScreen.BUDGETS, Icons.Default.PieChart, "Budget"),
-                        Triple(null, Icons.Default.Menu, "More")
+                        Triple(AppScreen.DASHBOARD, Icons.Default.Dashboard, stringResource(com.example.R.string.dashboard)),
+                        Triple(AppScreen.TRANSACTIONS, Icons.AutoMirrored.Filled.ReceiptLong, stringResource(com.example.R.string.transactions)),
+                        Triple(AppScreen.ACCOUNTS, Icons.Default.AccountBalance, stringResource(com.example.R.string.accounts)),
+                        Triple(AppScreen.BUDGETS, Icons.Default.PieChart, stringResource(com.example.R.string.budgets)),
+                        Triple(null, Icons.Default.Menu, stringResource(com.example.R.string.more))
                     )
 
                     tabs.forEach { (screen, icon, label) ->
@@ -498,7 +516,7 @@ fun MainAppScaffold(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "More Features",
+                    text = stringResource(com.example.R.string.more_features_subtitle),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -509,8 +527,8 @@ fun MainAppScaffold(
                     icon = Icons.Default.Handshake,
                     iconBgColor = Color(0xFFFEF3C7),
                     iconTint = Color(0xFFD97706),
-                    title = "Loans & Debt",
-                    subtitle = "Track lent, borrowed, interest & repayments",
+                    title = stringResource(com.example.R.string.loans_debt),
+                    subtitle = stringResource(com.example.R.string.loans_subtitle),
                     isSelected = currentScreen == AppScreen.LOANS,
                     onClick = {
                         shellState.showMoreSheet = false
@@ -523,8 +541,8 @@ fun MainAppScaffold(
                     icon = Icons.Default.CardGiftcard,
                     iconBgColor = Color(0xFFD1FAE5),
                     iconTint = Color(0xFF059669),
-                    title = "Wishlist",
-                    subtitle = "Financial goals & affordability forecasting",
+                    title = stringResource(com.example.R.string.wishlist),
+                    subtitle = stringResource(com.example.R.string.wishlist_subtitle),
                     isSelected = currentScreen == AppScreen.WISHLIST,
                     onClick = {
                         shellState.showMoreSheet = false
@@ -537,8 +555,8 @@ fun MainAppScaffold(
                     icon = Icons.Default.AutoStories,
                     iconBgColor = Color(0xFFDBEAFE),
                     iconTint = Color(0xFF2563EB),
-                    title = "Journal",
-                    subtitle = "Financial thoughts, reflections & mood logs",
+                    title = stringResource(com.example.R.string.journal),
+                    subtitle = stringResource(com.example.R.string.journal_subtitle),
                     isSelected = currentScreen == AppScreen.JOURNAL,
                     onClick = {
                         shellState.showMoreSheet = false
@@ -551,8 +569,8 @@ fun MainAppScaffold(
                     icon = Icons.Default.Description,
                     iconBgColor = Color(0xFFCCFBF1),
                     iconTint = Color(0xFF0D9488),
-                    title = "Settings",
-                    subtitle = "PDF statements, JSON/CSV backups & settings",
+                    title = stringResource(com.example.R.string.settings),
+                    subtitle = stringResource(com.example.R.string.settings_subtitle),
                     isSelected = currentScreen == AppScreen.DOCS,
                     onClick = {
                         shellState.showMoreSheet = false
@@ -567,8 +585,8 @@ fun MainAppScaffold(
                     icon = Icons.AutoMirrored.Filled.Logout,
                     iconBgColor = Color(0xFFFEE2E2),
                     iconTint = Color(0xFFEF4444),
-                    title = "Sign Out",
-                    subtitle = "Log out from your offline account",
+                    title = stringResource(com.example.R.string.sign_out),
+                    subtitle = stringResource(com.example.R.string.sign_out_subtitle),
                     isSelected = false,
                     onClick = {
                         shellState.showMoreSheet = false

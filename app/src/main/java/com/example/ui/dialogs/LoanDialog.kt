@@ -39,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.data.local.entities.Account
 import com.example.data.local.entities.InterestFrequency
@@ -123,12 +125,12 @@ fun LoanDialog(
                     Tab(
                         selected = selectedTypeTab == 0,
                         onClick = { selectedTypeTab = 0 },
-                        text = { Text("I Lent (Receivable)") }
+                        text = { Text(stringResource(R.string.i_lent)) }
                     )
                     Tab(
                         selected = selectedTypeTab == 1,
                         onClick = { selectedTypeTab = 1 },
-                        text = { Text("I Borrowed (Payable)") }
+                        text = { Text(stringResource(R.string.i_borrowed)) }
                     )
                 }
 
@@ -145,7 +147,7 @@ fun LoanDialog(
                 OutlinedTextField(
                     value = principalStr,
                     onValueChange = { principalStr = it },
-                    label = { Text("Principal Amount ($currency)*") },
+                    label = { Text(stringResource(R.string.principal_currency, currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -155,7 +157,7 @@ fun LoanDialog(
                 OutlinedTextField(
                     value = rateStr,
                     onValueChange = { rateStr = it },
-                    label = { Text("Annual Interest Rate (%)") },
+                    label = { Text(stringResource(R.string.annual_interest_rate)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -179,7 +181,7 @@ fun LoanDialog(
                             modifier = Modifier.fillMaxWidth().clickable { modeExpanded = true }
                         ) {
                             Column(modifier = Modifier.padding(10.dp)) {
-                                Text("Mode", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                Text(stringResource(R.string.mode), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                                 Text(interestMode.name, fontWeight = FontWeight.SemiBold)
                             }
                         }
@@ -201,7 +203,7 @@ fun LoanDialog(
                             modifier = Modifier.fillMaxWidth().clickable { freqExpanded = true }
                         ) {
                             Column(modifier = Modifier.padding(10.dp)) {
-                                Text("Frequency", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                Text(stringResource(R.string.frequency), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                                 Text(interestFrequency.name, fontWeight = FontWeight.SemiBold)
                             }
                         }
@@ -229,10 +231,10 @@ fun LoanDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Start Date", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.start_date), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                             Text(NepaliDateConverter.formatDualDate(startDateMillis), fontWeight = FontWeight.SemiBold)
                         }
-                        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = "Pick Date", tint = MaterialTheme.colorScheme.primary)
+                        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = stringResource(R.string.pick_date), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
 
@@ -240,7 +242,7 @@ fun LoanDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes (optional)") },
+                    label = { Text(stringResource(R.string.notes_optional)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 2
                 )
@@ -277,12 +279,12 @@ fun LoanDialog(
                     )
                 }
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

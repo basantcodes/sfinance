@@ -43,6 +43,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.JournalEntry
 import com.example.data.nepali.NepaliDateConverter
 import com.example.ui.components.EmptyStateCard
@@ -68,7 +70,7 @@ fun JournalScreen(
         item {
             Column {
                 Text(
-                    text = "Mindful finance, goals, and daily thoughts",
+                    text = stringResource(R.string.journal_intro),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -78,9 +80,9 @@ fun JournalScreen(
             if (entries.isEmpty()) {
                 item {
                     EmptyStateCard(
-                        title = "Your journal is ready",
-                        subtitle = "Capture a thought, a money win, or a lesson from today’s decisions.",
-                        actionLabel = "+ Write First Entry",
+                        title = stringResource(R.string.journal_ready),
+                        subtitle = stringResource(R.string.journal_ready_description),
+                        actionLabel = stringResource(R.string.write_first_entry),
                         onAction = onOpenAddEntry,
                         icon = "📓",
                         accentColor = EmeraldPrimary
@@ -117,7 +119,7 @@ fun JournalScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Recorded at ${entry.time}",
+                            text = stringResource(R.string.recorded_at, entry.time),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -133,7 +135,7 @@ fun JournalScreen(
             },
             confirmButton = {
                 TextButton(onClick = { viewingEntry = null }) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             }
         )
@@ -143,8 +145,8 @@ fun JournalScreen(
     entryToDelete?.let { entry ->
         AlertDialog(
             onDismissRequest = { entryToDelete = null },
-            title = { Text("Delete Journal Entry") },
-            text = { Text("Are you sure you want to delete this journal entry?") },
+            title = { Text(stringResource(R.string.delete_journal_entry)) },
+            text = { Text(stringResource(R.string.delete_journal_confirmation)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -152,12 +154,12 @@ fun JournalScreen(
                         entryToDelete = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { entryToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -204,10 +206,10 @@ fun JournalCardItem(
 
                 Row {
                     IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit), modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }

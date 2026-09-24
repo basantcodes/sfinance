@@ -52,6 +52,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.TransactionEntity
 import com.example.data.nepali.NepaliDateConverter
 import com.example.ui.components.ExpensePieChart
@@ -86,10 +88,10 @@ fun DashboardScreen(
 
     val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     val greeting = when (currentHour) {
-        in 5..11 -> "Good morning"
-        in 12..16 -> "Good afternoon"
-        in 17..20 -> "Good evening"
-        else -> "Good night"
+        in 5..11 -> stringResource(R.string.good_morning)
+        in 12..16 -> stringResource(R.string.good_afternoon)
+        in 17..20 -> stringResource(R.string.good_evening)
+        else -> stringResource(R.string.good_night)
     }
     val userName = authState.currentUser?.name?.trim()?.ifBlank { null } ?: "there"
     val greetingTitle = "$greeting, $userName"
@@ -111,7 +113,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Today: $todayDualDate",
+                    text = stringResource(R.string.today_date, todayDualDate),
                     style = MaterialTheme.typography.labelLarge,
                     color = EmeraldPrimary,
                     fontWeight = FontWeight.SemiBold
@@ -148,7 +150,7 @@ fun DashboardScreen(
                         ) {
                             Icon(
                                 Icons.Default.ArrowBackIosNew,
-                                contentDescription = "Previous Month",
+                                contentDescription = stringResource(R.string.previous_month),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -162,7 +164,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "$monthName $year",
+                                text = stringResource(R.string.month_year, monthName, year),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -176,7 +178,7 @@ fun DashboardScreen(
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowForwardIos,
-                                contentDescription = "Next Month",
+                                contentDescription = stringResource(R.string.next_month),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -204,7 +206,7 @@ fun DashboardScreen(
                     ) {
                         Column {
                             Text(
-                                text = "NET WORTH",
+                                text = stringResource(R.string.net_worth),
                                 fontSize = 12.sp,
                                 color = Color.White.copy(alpha = 0.8f),
                                 fontWeight = FontWeight.SemiBold,
@@ -237,14 +239,14 @@ fun DashboardScreen(
                                     Box(modifier = Modifier.weight(1f)) {
                                         AccountMiniSummary(
                                             icon = Icons.Default.AccountBalance,
-                                            label = "Bank",
+                                            label = stringResource(R.string.bank),
                                             amount = formatAmount(dashboardData.totalBank, currency)
                                         )
                                     }
                                     Box(modifier = Modifier.weight(1f)) {
                                         AccountMiniSummary(
                                             icon = Icons.Default.CreditCard,
-                                            label = "Cash & Wallet",
+                                            label = stringResource(R.string.cash_wallet),
                                             amount = formatAmount(dashboardData.totalCash + dashboardData.totalWallet, currency)
                                         )
                                     }
@@ -256,15 +258,15 @@ fun DashboardScreen(
                                     Box(modifier = Modifier.weight(1f)) {
                                         AccountMiniSummary(
                                             icon = Icons.Default.Savings,
-                                            label = "Investments",
+                                            label = stringResource(R.string.investments),
                                             amount = formatAmount(dashboardData.totalInvestments, currency)
                                         )
                                     }
                                     Box(modifier = Modifier.weight(1f)) {
                                         AccountMiniSummary(
                                             icon = Icons.Default.Wallet,
-                                            label = "Active Loans",
-                                            amount = "${dashboardData.activeLoansCount} active"
+                                            label = stringResource(R.string.active_loans),
+                                            amount = stringResource(R.string.active_loans_count, dashboardData.activeLoansCount)
                                         )
                                     }
                                 }
@@ -284,7 +286,7 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Monthly Performance",
+                            text = stringResource(R.string.monthly_performance),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -295,21 +297,21 @@ fun DashboardScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             FlowItem(
-                                title = "Income",
+                                title = stringResource(R.string.income),
                                 amount = formatAmount(dashboardData.monthlyIncome, currency),
                                 color = Color(0xFF059669),
                                 icon = Icons.AutoMirrored.Filled.TrendingUp,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             FlowItem(
-                                title = "Expenses",
+                                title = stringResource(R.string.expenses),
                                 amount = formatAmount(dashboardData.monthlyExpenses, currency),
                                 color = Color(0xFFEF4444),
                                 icon = Icons.AutoMirrored.Filled.TrendingDown,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             FlowItem(
-                                title = "Saved",
+                                title = stringResource(R.string.saved),
                                 amount = formatAmount(dashboardData.monthlySaved, currency),
                                 color = if (dashboardData.monthlySaved >= 0) Color(0xFF0D9488) else Color(0xFFEF4444),
                                 icon = Icons.Default.Wallet,
@@ -326,12 +328,12 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Savings Rate",
+                                text = stringResource(R.string.savings_rate),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "${String.format(Locale.US, "%.1f", dashboardData.savingsRate)}%",
+                                text = stringResource(R.string.signed_amount, "", "${String.format(Locale.US, "%.1f", dashboardData.savingsRate)}%"),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = if (dashboardData.savingsRate >= 0) Color(0xFF059669) else Color(0xFFEF4444)
@@ -351,7 +353,7 @@ fun DashboardScreen(
                         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
                         Text(
-                            text = "6-Month Cash Flow Trend",
+                            text = stringResource(R.string.six_month_cash_flow),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -365,7 +367,7 @@ fun DashboardScreen(
                             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
                             Text(
-                                text = "Expenses by Category",
+                                text = stringResource(R.string.expenses_by_category),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -395,21 +397,21 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Monthly Budgets",
+                                text = stringResource(R.string.monthly_budgets),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             TextButton(onClick = onNavigateToBudgets) {
-                                Text("Manage →", color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.manage), color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
 
                         if (dashboardData.budgetsWithProgress.isEmpty()) {
                             EmptyStateCard(
-                                title = "No monthly budgets yet",
-                                subtitle = "Add category limits to turn this section into a live spending guide.",
-                                actionLabel = "Manage Budgets",
+                                title = stringResource(R.string.no_monthly_budgets),
+                                subtitle = stringResource(R.string.budget_guide),
+                                actionLabel = stringResource(R.string.manage_budgets),
                                 onAction = onNavigateToBudgets,
                                 icon = "📊",
                                 accentColor = EmeraldPrimary
@@ -452,12 +454,12 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Loan Position (${dashboardData.activeLoansCount} Active)",
+                                text = stringResource(R.string.loan_position_count, dashboardData.activeLoansCount),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             TextButton(onClick = onNavigateToLoans) {
-                                Text("Details →", color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.details), color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
@@ -466,15 +468,15 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Text("You'll receive", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD97706))
+                                Text(stringResource(R.string.youll_receive), style = MaterialTheme.typography.labelSmall, color = Color(0xFFD97706))
                                 Text(formatAmount(dashboardData.totalLent, currency), fontWeight = FontWeight.Bold)
                             }
                             Column {
-                                Text("You'll pay", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9333EA))
+                                Text(stringResource(R.string.youll_pay), style = MaterialTheme.typography.labelSmall, color = Color(0xFF9333EA))
                                 Text(formatAmount(dashboardData.totalBorrowed, currency), fontWeight = FontWeight.Bold)
                             }
                             Column {
-                                Text("Net", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.net), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
                                     formatAmount(dashboardData.netReceivable, currency),
                                     fontWeight = FontWeight.Bold,
@@ -501,21 +503,21 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Recent Transactions",
+                                text = stringResource(R.string.recent_transactions),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             TextButton(onClick = onNavigateToTransactions) {
-                                Text("View All", color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.view_all), color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
 
                         if (dashboardData.recentTransactions.isEmpty()) {
                             EmptyStateCard(
-                                title = "No recent activity",
-                                subtitle = "Add your first transaction and your dashboard will start telling the story.",
-                                actionLabel = "Add Transaction",
+                                title = stringResource(R.string.no_recent_activity),
+                                subtitle = stringResource(R.string.dashboard_first_transaction),
+                                actionLabel = stringResource(R.string.add_transaction),
                                 onAction = onOpenAddTransaction,
                                 icon = "🧾",
                                 accentColor = EmeraldPrimary
@@ -662,7 +664,7 @@ fun RecentTransactionItem(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "${SimpleDateFormat("MMM dd", Locale.US).format(Date(transaction.date))} (${transaction.dateBs})",
+                        text = stringResource(R.string.generated_date, SimpleDateFormat("MMM dd", Locale.US).format(Date(transaction.date)), transaction.dateBs),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -676,7 +678,7 @@ fun RecentTransactionItem(
                 tonalElevation = 0.dp
             ) {
                 Text(
-                    text = "${if (isPositive) "+" else "-"}${formatAmount(transaction.amount, currency)}",
+                    text = stringResource(R.string.signed_amount, if (isPositive) "+" else "-", formatAmount(transaction.amount, currency)),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = balanceColor,

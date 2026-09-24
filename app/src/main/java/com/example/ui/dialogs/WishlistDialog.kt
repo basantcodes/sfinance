@@ -35,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.data.local.entities.WishlistItem
 import com.example.data.nepali.NepaliDateConverter
@@ -73,7 +75,7 @@ fun WishlistDialog(
         tonalElevation = 6.dp,
         title = {
             Text(
-                text = if (itemToEdit == null) "New Wishlist Item" else "Edit Wishlist Item",
+                text = stringResource(if (itemToEdit == null) R.string.new_wishlist_item else R.string.edit_wishlist_item),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -89,7 +91,7 @@ fun WishlistDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Item Name*") },
+                    label = { Text(stringResource(R.string.item_name_required)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -97,7 +99,7 @@ fun WishlistDialog(
                 OutlinedTextField(
                     value = costStr,
                     onValueChange = { costStr = it },
-                    label = { Text("Estimated Cost ($currency)*") },
+                    label = { Text(stringResource(R.string.estimated_cost_required, currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -111,7 +113,7 @@ fun WishlistDialog(
                             .clickable { priorityExpanded = true }
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Priority", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.priority), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                             Text(priority, fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -144,20 +146,20 @@ fun WishlistDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Target Date (Dual AD/BS)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.date_dual), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                             Text(
-                                text = preferredDate?.let { NepaliDateConverter.formatDualDate(it) } ?: "No target date set",
+                                text = preferredDate?.let { NepaliDateConverter.formatDualDate(it) } ?: stringResource(R.string.no_target_date),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-                        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = "Pick Date", tint = MaterialTheme.colorScheme.primary)
+                        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = stringResource(R.string.pick_date), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
 
                 OutlinedTextField(
                     value = category,
                     onValueChange = { category = it },
-                    label = { Text("Category (e.g. Gadgets, Travel)") },
+                    label = { Text(stringResource(R.string.category_example)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -165,7 +167,7 @@ fun WishlistDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes / Specifications") },
+                    label = { Text(stringResource(R.string.notes_specifications)) },
                     maxLines = 2,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -179,23 +181,23 @@ fun WishlistDialog(
             Button(
                 onClick = {
                     if (name.isBlank()) {
-                        errorMessage = "Item name is required"
+                        errorMessage = stringResource(R.string.item_name_error)
                         return@Button
                     }
                     val cost = costStr.toDoubleOrNull()
                     if (cost == null || cost <= 0) {
-                        errorMessage = "Please enter a valid estimated cost"
+                        errorMessage = stringResource(R.string.valid_estimated_cost)
                         return@Button
                     }
                     onSaveItem(name.trim(), cost, priority, preferredDate, category.ifBlank { null }, notes.ifBlank { null })
                 }
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

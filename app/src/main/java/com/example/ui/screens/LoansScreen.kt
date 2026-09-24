@@ -52,6 +52,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.Loan
 import com.example.data.local.entities.LoanStatus
 import com.example.data.local.entities.LoanType
@@ -101,7 +103,7 @@ fun LoansScreen(
         item {
             Column {
                 Text(
-                    text = "Track money lent & borrowed with interest",
+                    text = stringResource(R.string.track_loans),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -121,15 +123,15 @@ fun LoansScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("You'll receive", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD97706))
+                                Text(stringResource(R.string.youll_receive), style = MaterialTheme.typography.labelSmall, color = Color(0xFFD97706))
                                 Text(formatAmount(totalLent, currency), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("You'll pay", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9333EA))
+                                Text(stringResource(R.string.youll_pay), style = MaterialTheme.typography.labelSmall, color = Color(0xFF9333EA))
                                 Text(formatAmount(totalBorrowed, currency), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("Net", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.net), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
                                     formatAmount(netReceivable, currency),
                                     style = MaterialTheme.typography.titleMedium,
@@ -148,12 +150,12 @@ fun LoansScreen(
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("Active Loans (${activeLoans.size})") }
+                        text = { Text(stringResource(R.string.active_loans_tab, activeLoans.size)) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("Repaid (${loans.size - activeLoans.size})") }
+                        text = { Text(stringResource(R.string.repaid_loans_tab, loans.size - activeLoans.size)) }
                     )
                 }
             }
@@ -161,13 +163,13 @@ fun LoansScreen(
             if (filteredLoans.isEmpty()) {
                 item {
                     EmptyStateCard(
-                        title = "No ${if (selectedTab == 0) "active" else "repaid"} loans",
+                        title = stringResource(if (selectedTab == 0) R.string.no_active_loans else R.string.no_repaid_loans),
                         subtitle = if (selectedTab == 0) {
-                            "Record money you lend or borrow so repayment dates and balances stay visible."
+                            stringResource(R.string.active_loan_description)
                         } else {
-                            "Repaid loans will appear here as your history grows."
+                            stringResource(R.string.repaid_loan_description)
                         },
-                        actionLabel = if (selectedTab == 0) "+ Record New Loan" else null,
+                        actionLabel = if (selectedTab == 0) stringResource(R.string.record_new_loan) else null,
                         onAction = if (selectedTab == 0) onOpenAddLoan else null,
                         icon = "🤝",
                         accentColor = EmeraldPrimary
@@ -202,11 +204,11 @@ fun LoansScreen(
     loanToRepay?.let { loan ->
         AlertDialog(
             onDismissRequest = { loanToRepay = null },
-            title = { Text("Record Loan Payment") },
+            title = { Text(stringResource(R.string.record_loan_payment)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        "Remaining: ${formatAmount(loan.remainingAmount, currency)}\nCounterparty: ${loan.counterparty}\nType: ${loan.type}"
+                        stringResource(R.string.remaining_counterparty_type, formatAmount(loan.remainingAmount, currency), loan.counterparty, loan.type)
                     )
                     OutlinedTextField(
                         value = repaymentAmountStr,
@@ -214,25 +216,25 @@ fun LoansScreen(
                             repaymentAmountStr = it
                             repaymentError = null
                         },
-                        label = { Text("Payment Amount ($currency)") },
+                        label = { Text(stringResource(R.string.payment_amount, currency)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Text(
-                        "You can pay or receive part of the balance. The loan stays active until the remaining amount reaches zero.",
+                        stringResource(R.string.partial_payment_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         if (loan.type == LoanType.LEND.name)
-                            "Select account to receive repayment into (creates Income transaction):"
+                            stringResource(R.string.receive_repayment_account)
                         else
-                            "Select account to pay debt from (creates Expense transaction):",
+                            stringResource(R.string.pay_debt_account),
                         style = MaterialTheme.typography.bodySmall
                     )
                     AccountPicker(
-                        label = "Settlement Account",
+                        label = stringResource(R.string.settlement_account),
                         accounts = accounts,
                         selectedId = repayAccountId,
                         onSelect = { repayAccountId = it }
@@ -246,13 +248,13 @@ fun LoansScreen(
                         val amount = repaymentAmountStr.toDoubleOrNull()
                         when {
                             amount == null || !amount.isFinite() || amount <= 0 -> {
-                                repaymentError = "Enter a positive payment amount"
+                                repaymentError = stringResource(R.string.positive_payment_error)
                             }
                             amount > loan.remainingAmount + 0.0001 -> {
-                                repaymentError = "Payment cannot exceed the remaining balance"
+                                repaymentError = stringResource(R.string.payment_exceeds_balance)
                             }
                             repayAccountId == null -> {
-                                repaymentError = "Select a settlement account"
+                                repaymentError = stringResource(R.string.select_settlement_account)
                             }
                             else -> {
                                 viewModel.markLoanRepaid(loan, repayAccountId, amount)
@@ -261,12 +263,12 @@ fun LoansScreen(
                         }
                     }
                 ) {
-                    Text("Record Payment")
+                    Text(stringResource(R.string.record_payment))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { loanToRepay = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -276,14 +278,14 @@ fun LoansScreen(
     loanForInterest?.let { loan ->
         AlertDialog(
             onDismissRequest = { loanForInterest = null },
-            title = { Text("Add Accrued Interest") },
+            title = { Text(stringResource(R.string.add_accrued_interest)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Loan with ${loan.counterparty} (${loan.interestRate}% interest)")
+                    Text(stringResource(R.string.loan_interest_summary, loan.counterparty, loan.interestRate))
                     OutlinedTextField(
                         value = interestAmountStr,
                         onValueChange = { interestAmountStr = it },
-                        label = { Text("Interest Amount ($currency)") },
+                        label = { Text(stringResource(R.string.interest_amount, currency)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -303,12 +305,12 @@ fun LoansScreen(
                         }
                     }
                 ) {
-                    Text("Add Interest")
+                    Text(stringResource(R.string.add_interest))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { loanForInterest = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -318,8 +320,8 @@ fun LoansScreen(
     loanToDelete?.let { loan ->
         AlertDialog(
             onDismissRequest = { loanToDelete = null },
-            title = { Text("Delete Loan") },
-            text = { Text("Are you sure you want to delete this loan record for ${loan.counterparty}?") },
+            title = { Text(stringResource(R.string.delete_loan)) },
+            text = { Text(stringResource(R.string.delete_loan_confirmation, loan.counterparty)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -327,12 +329,12 @@ fun LoansScreen(
                         loanToDelete = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { loanToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -380,7 +382,7 @@ fun LoanCardItem(
             }
 
             Text(
-                text = "Outstanding balance${if (loan.remainingAmount != loan.principal) " • Principal ${formatAmount(loan.principal, currency)}" else ""}",
+                text = stringResource(R.string.outstanding_balance) + if (loan.remainingAmount != loan.principal) stringResource(R.string.principal_amount, formatAmount(loan.principal, currency)) else "",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -388,14 +390,14 @@ fun LoanCardItem(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Started: ${NepaliDateConverter.formatDualDate(loan.startDate)}",
+                text = stringResource(R.string.started_date, NepaliDateConverter.formatDualDate(loan.startDate)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             if (loan.interestRate > 0) {
                 Text(
-                    text = "Rate: ${loan.interestRate}% • Mode: ${loan.interestMode} (${loan.interestFrequency ?: "MONTHLY"})",
+                    text = stringResource(R.string.rate_mode, loan.interestRate, loan.interestMode, loan.interestFrequency ?: "MONTHLY"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -423,7 +425,7 @@ fun LoanCardItem(
                     ) {
                         Icon(Icons.Default.Percent, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("+ Interest", fontSize = 12.sp)
+                        Text(stringResource(R.string.interest_short), fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -434,14 +436,14 @@ fun LoanCardItem(
                     ) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Repaid", fontSize = 12.sp)
+                        Text(stringResource(R.string.repaid), fontSize = 12.sp)
                     }
                 }
 
                 Spacer(modifier = Modifier.width(4.dp))
 
                 IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
                 }
             }
         }

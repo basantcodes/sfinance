@@ -33,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.Mood
 import com.example.data.local.entities.TransactionType
 import com.example.data.repository.Affordability
@@ -108,9 +110,11 @@ fun EmptyStateCard(
 
 @Composable
 fun LoadingStateCard(
-    title: String = "Loading your data",
-    subtitle: String = "Checking balances and recent activity…"
+    title: String? = null,
+    subtitle: String? = null
 ) {
+    val resolvedTitle = title ?: stringResource(R.string.loading_data)
+    val resolvedSubtitle = subtitle ?: stringResource(R.string.checking_activity)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -151,13 +155,13 @@ fun LoadingStateCard(
             )
 
             Text(
-                text = title,
+                text = resolvedTitle,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
 
             Text(
-                text = subtitle,
+                text = resolvedSubtitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -220,6 +224,14 @@ fun TransactionTypeBadge(type: String, modifier: Modifier = Modifier) {
         TransactionType.BORROW.name -> Triple(ColorBorrow.copy(alpha = 0.15f), ColorBorrow, "↘")
         else -> Triple(Color.Gray.copy(alpha = 0.15f), Color.Gray, "•")
     }
+    val label = when (type) {
+        TransactionType.INCOME.name -> stringResource(R.string.income)
+        TransactionType.EXPENSE.name -> stringResource(R.string.expense)
+        TransactionType.TRANSFER.name -> stringResource(R.string.transfer)
+        TransactionType.LEND.name -> stringResource(R.string.lend)
+        TransactionType.BORROW.name -> stringResource(R.string.borrow)
+        else -> type
+    }
 
     Box(
         modifier = modifier
@@ -231,7 +243,7 @@ fun TransactionTypeBadge(type: String, modifier: Modifier = Modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = emoji, color = fg, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = type, color = fg, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+            Text(text = label, color = fg, fontWeight = FontWeight.Bold, fontSize = 11.sp)
         }
     }
 }
@@ -239,9 +251,9 @@ fun TransactionTypeBadge(type: String, modifier: Modifier = Modifier) {
 @Composable
 fun AffordabilityBadge(affordability: Affordability, modifier: Modifier = Modifier) {
     val (bg, fg, label) = when (affordability) {
-        Affordability.CAN_AFFORD_NOW -> Triple(Color(0xFF10B981).copy(alpha = 0.15f), Color(0xFF047857), "Can Afford Now")
-        Affordability.CAN_AFFORD_BY_DATE -> Triple(Color(0xFFF59E0B).copy(alpha = 0.15f), Color(0xFFB45309), "Projected by Date")
-        Affordability.CANNOT_AFFORD -> Triple(Color(0xFFEF4444).copy(alpha = 0.15f), Color(0xFFB91C1C), "Need Savings")
+        Affordability.CAN_AFFORD_NOW -> Triple(Color(0xFF10B981).copy(alpha = 0.15f), Color(0xFF047857), stringResource(R.string.can_afford_now))
+        Affordability.CAN_AFFORD_BY_DATE -> Triple(Color(0xFFF59E0B).copy(alpha = 0.15f), Color(0xFFB45309), stringResource(R.string.projected_by_date))
+        Affordability.CANNOT_AFFORD -> Triple(Color(0xFFEF4444).copy(alpha = 0.15f), Color(0xFFB91C1C), stringResource(R.string.need_savings))
     }
 
     Box(
@@ -257,9 +269,9 @@ fun AffordabilityBadge(affordability: Affordability, modifier: Modifier = Modifi
 @Composable
 fun PriorityIndicator(priority: String, modifier: Modifier = Modifier) {
     val (color, label) = when (priority.uppercase()) {
-        "HIGH" -> Color(0xFFEF4444) to "High"
-        "MEDIUM" -> Color(0xFFF59E0B) to "Med"
-        else -> Color(0xFF10B981) to "Low"
+        "HIGH" -> Color(0xFFEF4444) to stringResource(R.string.high)
+        "MEDIUM" -> Color(0xFFF59E0B) to stringResource(R.string.medium_short)
+        else -> Color(0xFF10B981) to stringResource(R.string.low)
     }
 
     Row(

@@ -44,6 +44,7 @@ class PreferenceManager(private val context: Context) {
         val PREF_CURRENCY = stringPreferencesKey("app_currency")
         val PREF_THEME_MODE = stringPreferencesKey("theme_mode")
         val PREF_ALLOW_NEGATIVE_BALANCE = booleanPreferencesKey("allow_negative_balance")
+        val PREF_LANGUAGE = stringPreferencesKey("app_language")
     }
 
     fun saveAuthToken(token: String, userId: String, username: String, name: String) {
@@ -76,6 +77,15 @@ class PreferenceManager(private val context: Context) {
         preferences[PREF_ALLOW_NEGATIVE_BALANCE] ?: false
     }
 
+    val languageFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PREF_LANGUAGE] ?: supportedDeviceLanguage()
+    }
+
+    fun getLanguage(): String = context.getSharedPreferences("app_settings_sync", Context.MODE_PRIVATE)
+        .getString("app_language", null)
+        ?.takeIf { it == "en" || it == "ne" }
+        ?: supportedDeviceLanguage()
+
     suspend fun setCurrency(currency: String) {
         context.dataStore.edit { preferences ->
             preferences[PREF_CURRENCY] = currency
@@ -93,4 +103,18 @@ class PreferenceManager(private val context: Context) {
             preferences[PREF_ALLOW_NEGATIVE_BALANCE] = allow
         }
     }
+
+    suspend fun setLanguage(language: String) {
+        val supportedLanguage = language.takeIf { it == "en" || it == "ne" } ?: "en"
+        context.getSharedPreferences("app_settings_sync", Context.MODE_PRIVATE)
+            .edit()
+            .putString("app_language", supportedLanguage)
+            .apply()
+        context.dataStore.edit { preferences ->
+            preferences[PREF_LANGUAGE] = supportedLanguage
+        }
+    }
+
+    private fun supportedDeviceLanguage(): String =
+        if (java.util.Locale.getDefault().language == "ne") "ne" else "en"
 }

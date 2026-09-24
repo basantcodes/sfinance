@@ -66,6 +66,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.TransactionEntity
 import com.example.data.nepali.NepaliDateConverter
 import com.example.ui.components.NepaliDatePickerDialog
@@ -167,12 +169,12 @@ fun TransactionsScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.transactionSearchQuery.value = it },
-                placeholder = { Text("Search by name, notes, or BS date...") },
+                placeholder = { Text(stringResource(R.string.search_transactions)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { viewModel.transactionSearchQuery.value = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear))
                         }
                     }
                 },
@@ -204,9 +206,9 @@ fun TransactionsScreen(
                             if (isRangeActive) {
                                 val startBs = NepaliDateConverter.adToBs(customDateRange!!.first).formatted
                                 val endBs = NepaliDateConverter.adToBs(customDateRange!!.second).formatted
-                                Text("$startBs - $endBs")
+                                Text(stringResource(R.string.date_range, startBs, endBs))
                             } else {
-                                Text("Custom Range")
+                                        Text(stringResource(R.string.custom_range))
                             }
                         },
                         trailingIcon = if (isRangeActive) {
@@ -217,7 +219,7 @@ fun TransactionsScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.Clear,
-                                        contentDescription = "Clear range",
+                                        contentDescription = stringResource(R.string.clear_range),
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
@@ -238,7 +240,7 @@ fun TransactionsScreen(
                     FilterChip(
                         selected = selectedCategoryId == null,
                         onClick = { selectedCategoryId = null },
-                        label = { Text("All Categories") }
+                        label = { Text(stringResource(R.string.all_categories)) }
                     )
                 }
                 items(categories, key = { it.id }) { cat ->
@@ -261,7 +263,7 @@ fun TransactionsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Showing ${visibleTransactions.size} of ${combinedFilteredTransactions.size}",
+                        text = stringResource(R.string.showing_count, visibleTransactions.size, combinedFilteredTransactions.size),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -271,7 +273,7 @@ fun TransactionsScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Page Size:",
+                        text = stringResource(R.string.page_size),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -307,9 +309,9 @@ fun TransactionsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 EmptyStateCard(
-                    title = "No transactions found",
-                    subtitle = "Try adjusting your filters or add a new transaction to get started.",
-                    actionLabel = "+ Add First Transaction",
+                    title = stringResource(R.string.no_transactions),
+                    subtitle = stringResource(R.string.transactions_empty_description),
+                    actionLabel = stringResource(R.string.add_first_transaction),
                     onAction = onOpenAddTransaction,
                     icon = "🧾",
                     accentColor = EmeraldPrimary
@@ -357,7 +359,7 @@ fun TransactionsScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = "($totalTxnsInMonth)",
+                                            text = stringResource(R.string.month_transaction_count, totalTxnsInMonth),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -369,7 +371,7 @@ fun TransactionsScreen(
                                         ) {
                                             if (monthIncome > 0) {
                                                 Text(
-                                                    text = "+${formatAmount(monthIncome, currency)}",
+                                                    text = stringResource(R.string.signed_amount, "+", formatAmount(monthIncome, currency)),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = EmeraldPrimary,
                                                     fontWeight = FontWeight.SemiBold
@@ -377,7 +379,7 @@ fun TransactionsScreen(
                                             }
                                             if (monthExpense > 0) {
                                                 Text(
-                                                    text = "-${formatAmount(monthExpense, currency)}",
+                                                    text = stringResource(R.string.signed_amount, "-", formatAmount(monthExpense, currency)),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.error,
                                                     fontWeight = FontWeight.SemiBold
@@ -424,7 +426,7 @@ fun TransactionsScreen(
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                text = "(${txns.size})",
+                                                text = stringResource(R.string.month_transaction_count, txns.size),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -529,7 +531,7 @@ fun TransactionsScreen(
                                 },
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Load More (${combinedFilteredTransactions.size - visibleLimit} remaining)")
+                                Text(stringResource(R.string.load_more, combinedFilteredTransactions.size - visibleLimit))
                             }
                         }
                     }
@@ -579,14 +581,14 @@ fun TransactionsScreen(
                     modifier = Modifier.padding(20.dp)
                 ) {
                     Text(
-                        text = "Filter by Custom Date Range",
+                        text = stringResource(R.string.filter_custom_date),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "From Date (BS / AD)",
+                        text = stringResource(R.string.from_date),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -613,7 +615,7 @@ fun TransactionsScreen(
                             )
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = "Select Start Date",
+                                contentDescription = stringResource(R.string.select_start_date),
                                 tint = EmeraldPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -623,7 +625,7 @@ fun TransactionsScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "To Date (BS / AD)",
+                        text = stringResource(R.string.to_date),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -650,7 +652,7 @@ fun TransactionsScreen(
                             )
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = "Select End Date",
+                                contentDescription = stringResource(R.string.select_end_date),
                                 tint = EmeraldPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -671,7 +673,7 @@ fun TransactionsScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("Clear")
+                            Text(stringResource(R.string.clear))
                         }
                         Button(
                             onClick = {
@@ -701,7 +703,7 @@ fun TransactionsScreen(
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                         ) {
-                            Text("Apply", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.apply), color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -712,9 +714,9 @@ fun TransactionsScreen(
     transactionToDelete?.let { txn ->
         AlertDialog(
             onDismissRequest = { transactionToDelete = null },
-            title = { Text("Delete Transaction") },
+            title = { Text(stringResource(R.string.delete_transaction)) },
             text = {
-                Text("Are you sure you want to delete this ${txn.type} of $currency ${String.format("%.2f", txn.amount)}? Account balances will be safely reversed.")
+                Text(stringResource(R.string.delete_transaction_confirmation, txn.type, currency, String.format("%.2f", txn.amount)))
             },
             confirmButton = {
                 TextButton(
@@ -723,12 +725,12 @@ fun TransactionsScreen(
                         transactionToDelete = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { transactionToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -815,7 +817,7 @@ fun TransactionRowCard(
                     tonalElevation = 0.dp
                 ) {
                     Text(
-                        text = "${if (isPositive) "+" else "-"}${formatAmount(transaction.amount, currency)}",
+                        text = stringResource(R.string.signed_amount, if (isPositive) "+" else "-", formatAmount(transaction.amount, currency)),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = balanceColor,

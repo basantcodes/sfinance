@@ -42,6 +42,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.Budget
 import com.example.data.repository.BudgetProgress
 import com.example.ui.components.EmptyStateCard
@@ -74,7 +76,7 @@ fun BudgetsScreen(
         item {
             Column {
                 Text(
-                    text = "Category limits & rollover tracking",
+                    text = stringResource(R.string.budget_intro),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -94,11 +96,11 @@ fun BudgetsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Text("Total Budgeted", style = MaterialTheme.typography.labelSmall)
+                                Text(stringResource(R.string.total_budgeted), style = MaterialTheme.typography.labelSmall)
                                 Text(formatAmount(totalBudgeted, currency), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("Total Spent", style = MaterialTheme.typography.labelSmall)
+                                Text(stringResource(R.string.total_spent), style = MaterialTheme.typography.labelSmall)
                                 Text(
                                     formatAmount(totalSpent, currency),
                                     style = MaterialTheme.typography.titleLarge,
@@ -114,9 +116,9 @@ fun BudgetsScreen(
             if (budgetsWithProgress.isEmpty()) {
                 item {
                     EmptyStateCard(
-                        title = "No budgets configured",
-                        subtitle = "Set category limits to see spending progress and stay ahead of your monthly plan.",
-                        actionLabel = "+ Set Monthly Budget",
+                        title = stringResource(R.string.no_budgets),
+                        subtitle = stringResource(R.string.no_budgets_description),
+                        actionLabel = stringResource(R.string.set_monthly_budget),
                         onAction = onOpenAddBudget,
                         icon = "📊",
                         accentColor = EmeraldPrimary
@@ -141,8 +143,8 @@ fun BudgetsScreen(
     budgetToDelete?.let { budget ->
         AlertDialog(
             onDismissRequest = { budgetToDelete = null },
-            title = { Text("Delete Budget") },
-            text = { Text("Are you sure you want to remove this category budget?") },
+            title = { Text(stringResource(R.string.delete_budget)) },
+            text = { Text(stringResource(R.string.delete_budget_confirmation)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -150,12 +152,12 @@ fun BudgetsScreen(
                         budgetToDelete = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { budgetToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -198,7 +200,7 @@ fun BudgetCard(
                     )
                     if (budgetProgress.budget.rollover) {
                         Text(
-                            text = " • Rollover",
+                            text = stringResource(R.string.rollover),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -207,10 +209,10 @@ fun BudgetCard(
 
                 Row {
                     IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit), modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -222,13 +224,13 @@ fun BudgetCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${formatAmount(budgetProgress.spent, currency)} spent",
+                    text = stringResource(R.string.spent_amount, formatAmount(budgetProgress.spent, currency)),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = if (budgetProgress.isOverBudget) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "of ${formatAmount(budgetProgress.limit, currency)} (${String.format(Locale.US, "%.0f%%", budgetProgress.percentage * 100)})",
+                    text = stringResource(R.string.of_amount, formatAmount(budgetProgress.limit, currency), String.format(Locale.US, "%.0f%%", budgetProgress.percentage * 100)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -249,7 +251,7 @@ fun BudgetCard(
             if (budgetProgress.isOverBudget) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Over budget by ${formatAmount(budgetProgress.spent - budgetProgress.limit, currency)}",
+                    text = stringResource(R.string.over_budget_by, formatAmount(budgetProgress.spent - budgetProgress.limit, currency)),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFFEF4444),
                     fontWeight = FontWeight.Bold

@@ -67,42 +67,42 @@ object PdfExporter {
         canvas.drawRoundRect(28f, 24f, 567f, 106f, 14f, 14f, paint)
         paint.color = Color.parseColor("#10B981")
         canvas.drawRoundRect(28f, 24f, 36f, 106f, 4f, 4f, paint)
-        canvas.drawText("Sfinance", 40f, y, titlePaint)
+        canvas.drawText(context.getString(com.example.R.string.app_name), 40f, y, titlePaint)
         y += 18f
         val now = System.currentTimeMillis()
         val dualDateStr = NepaliDateConverter.formatDualDate(now)
-        canvas.drawText("Generated Statement • $dualDateStr", 40f, y, subheaderPaint)
-        canvas.drawText("Offline financial snapshot", 425f, y, subheaderPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_generated_statement, dualDateStr), 40f, y, subheaderPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_offline_snapshot), 425f, y, subheaderPaint)
         y += 20f
-        canvas.drawText("Accounts, balances, and recent activity", 40f, y, subheaderPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_accounts_activity), 40f, y, subheaderPaint)
         y += 24f
 
         // Summary Card Box
         paint.color = Color.parseColor("#f8fafc")
         canvas.drawRoundRect(40f, y, 555f, y + 88f, 10f, 10f, paint)
 
-        canvas.drawText("Financial Overview ($currency)", 55f, y + 22f, headerPaint)
-        canvas.drawText("Net Worth: $currency ${String.format(Locale.US, "%.2f", dashboardData.netWorth)}", 55f, y + 42f, boldBodyPaint)
-        canvas.drawText("Bank: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalBank)}", 55f, y + 60f, bodyPaint)
-        canvas.drawText("Cash & Wallet: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalCash + dashboardData.totalWallet)}", 220f, y + 42f, bodyPaint)
-        canvas.drawText("Investments: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalInvestments)}", 220f, y + 60f, bodyPaint)
-        canvas.drawText("Total Lent: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalLent)}", 390f, y + 42f, bodyPaint)
-        canvas.drawText("Total Borrowed: $currency ${String.format(Locale.US, "%.2f", dashboardData.totalBorrowed)}", 390f, y + 60f, bodyPaint)
-        canvas.drawText("Transactions: ${transactions.size}", 390f, y + 78f, bodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_financial_overview, currency), 55f, y + 22f, headerPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_net_worth, currency, String.format(Locale.US, "%.2f", dashboardData.netWorth)), 55f, y + 42f, boldBodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_bank, currency, String.format(Locale.US, "%.2f", dashboardData.totalBank)), 55f, y + 60f, bodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_cash_wallet, currency, String.format(Locale.US, "%.2f", dashboardData.totalCash + dashboardData.totalWallet)), 220f, y + 42f, bodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_investments, currency, String.format(Locale.US, "%.2f", dashboardData.totalInvestments)), 220f, y + 60f, bodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_total_lent, currency, String.format(Locale.US, "%.2f", dashboardData.totalLent)), 390f, y + 42f, bodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_total_borrowed, currency, String.format(Locale.US, "%.2f", dashboardData.totalBorrowed)), 390f, y + 60f, bodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_transactions, transactions.size), 390f, y + 78f, bodyPaint)
 
         y += 113f
 
         // Transactions Table Header
-        canvas.drawText("Recent Transactions", 40f, y, headerPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_recent_transactions), 40f, y, headerPaint)
         y += 14f
 
         paint.color = Color.parseColor("#f1f5f9")
         canvas.drawRect(40f, y, 555f, y + 20f, paint)
-        canvas.drawText("Date (AD / BS)", 45f, y + 14f, boldBodyPaint)
-        canvas.drawText("Type", 185f, y + 14f, boldBodyPaint)
-        canvas.drawText("Description", 250f, y + 14f, boldBodyPaint)
-        canvas.drawText("Category", 390f, y + 14f, boldBodyPaint)
-        canvas.drawText("Amount", 485f, y + 14f, boldBodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_date), 45f, y + 14f, boldBodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_type), 185f, y + 14f, boldBodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_description_column), 250f, y + 14f, boldBodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_category), 390f, y + 14f, boldBodyPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_amount), 485f, y + 14f, boldBodyPaint)
         y += 22f
 
         val accountMap = accounts.associateBy { it.id }
@@ -115,7 +115,14 @@ object PdfExporter {
                 canvas.drawRect(40f, y, 555f, y + 20f, paint)
             }
             val dateStr = "${dateFormat.format(Date(txn.date))} (${txn.dateBs})"
-            val typeStr = txn.type
+            val typeStr = when (txn.type) {
+                "INCOME" -> context.getString(com.example.R.string.income)
+                "EXPENSE" -> context.getString(com.example.R.string.expense)
+                "TRANSFER" -> context.getString(com.example.R.string.transfer)
+                "LEND" -> context.getString(com.example.R.string.lend)
+                "BORROW" -> context.getString(com.example.R.string.borrow)
+                else -> txn.type
+            }
             val desc = (txn.name ?: "Transaction").take(22)
             val catStr = (categories[txn.categoryId]?.name ?: "-").take(16)
             val amountStr = "$currency ${String.format(Locale.US, "%.2f", txn.amount)}"
@@ -143,8 +150,8 @@ object PdfExporter {
 
         // Footer
         canvas.drawLine(40f, 790f, 555f, 790f, linePaint)
-        canvas.drawText("Sfinance • Dual AD/BS Offline Statement", 40f, 815f, subheaderPaint)
-        canvas.drawText("Generated ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(now))}", 405f, 815f, subheaderPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_footer), 40f, 815f, subheaderPaint)
+        canvas.drawText(context.getString(com.example.R.string.pdf_generated_at, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(now))), 405f, 815f, subheaderPaint)
 
         document.finishPage(page)
 

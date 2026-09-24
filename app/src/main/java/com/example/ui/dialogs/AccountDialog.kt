@@ -36,6 +36,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.Account
 import com.example.data.local.entities.AccountType
 import com.example.ui.components.FormFeedbackMessage
@@ -72,7 +74,7 @@ fun AccountDialog(
         tonalElevation = 6.dp,
         title = {
             Text(
-                text = if (accountToEdit == null) "New Account" else "Edit Account",
+                text = stringResource(if (accountToEdit == null) R.string.new_account else R.string.edit_account),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -85,7 +87,7 @@ fun AccountDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Account Name*") },
+                    label = { Text(stringResource(R.string.account_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -98,7 +100,7 @@ fun AccountDialog(
                             .clickable { typeMenuExpanded = true }
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(text = "Account Type", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(text = stringResource(R.string.account_type), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                             Text(text = selectedType.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -123,7 +125,7 @@ fun AccountDialog(
                 OutlinedTextField(
                     value = balanceStr,
                     onValueChange = { balanceStr = it },
-                    label = { Text("Balance ($defaultCurrency)*") },
+                    label = { Text(stringResource(R.string.amount_currency_required, defaultCurrency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -131,7 +133,7 @@ fun AccountDialog(
                 )
 
                 // Color Picker Row
-                Text(text = "Account Color", style = MaterialTheme.typography.labelMedium)
+                Text(text = stringResource(R.string.account_color), style = MaterialTheme.typography.labelMedium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -157,7 +159,7 @@ fun AccountDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes (optional)") },
+                    label = { Text(stringResource(R.string.notes_optional)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 2
                 )
@@ -171,12 +173,12 @@ fun AccountDialog(
             Button(
                 onClick = {
                     if (name.isBlank()) {
-                        errorMessage = "Account name is required"
+                        errorMessage = stringResource(R.string.account_name_required)
                         return@Button
                     }
                     val balance = balanceStr.toDoubleOrNull()
                     if (balance == null || balance < 0) {
-                        errorMessage = "Initial balance cannot be negative"
+                        errorMessage = stringResource(R.string.initial_balance_negative)
                         return@Button
                     }
 
@@ -189,12 +191,12 @@ fun AccountDialog(
                     )
                 }
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

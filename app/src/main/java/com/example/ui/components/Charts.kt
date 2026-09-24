@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.repository.CategoryExpenseShare
 import com.example.data.repository.MonthlyTrendPoint
 import java.util.Locale
@@ -50,7 +52,7 @@ fun ExpensePieChart(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "No expenses recorded this month",
+                text = stringResource(R.string.expense_chart_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -94,12 +96,12 @@ fun ExpensePieChart(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Total Spent",
+                    text = stringResource(R.string.total_spent_chart),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "$currency ${String.format(Locale.US, "%.0f", total)}",
+                    text = stringResource(R.string.currency_total, currency, String.format(Locale.US, "%.0f", total)),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -129,7 +131,7 @@ fun ExpensePieChart(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "${item.categoryName} (${String.format(Locale.US, "%.0f%%", item.percentage * 100)})",
+                        text = stringResource(R.string.expense_percent, item.categoryName, String.format(Locale.US, "%.0f", item.percentage * 100)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -153,7 +155,7 @@ fun IncomeExpenseAreaChart(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "No trend data available",
+                text = stringResource(R.string.trend_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -177,13 +179,13 @@ fun IncomeExpenseAreaChart(
         ) {
             Box(modifier = Modifier.size(8.dp).background(incomeColor, CircleShape))
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Income", style = MaterialTheme.typography.labelSmall, color = incomeColor)
+            Text(text = stringResource(R.string.income), style = MaterialTheme.typography.labelSmall, color = incomeColor)
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Box(modifier = Modifier.size(8.dp).background(expenseColor, CircleShape))
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Expenses", style = MaterialTheme.typography.labelSmall, color = expenseColor)
+            Text(text = stringResource(R.string.expenses), style = MaterialTheme.typography.labelSmall, color = expenseColor)
         }
 
         Canvas(

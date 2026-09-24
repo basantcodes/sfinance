@@ -72,6 +72,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -96,6 +97,7 @@ fun DocsScreen(
     val currency by viewModel.currencyState.collectAsState()
     val themeMode by viewModel.themeModeState.collectAsState()
     val allowNegativeBalance by viewModel.allowNegativeBalanceState.collectAsState()
+    val language by viewModel.languageState.collectAsState()
     val authState by viewModel.authState.collectAsState()
 
     var showJsonExportDialog by remember { mutableStateOf<String?>(null) }
@@ -120,9 +122,9 @@ fun DocsScreen(
                     context.contentResolver.openOutputStream(it)?.use { stream ->
                         stream.write(json.toByteArray(Charsets.UTF_8))
                     }
-                    Toast.makeText(context, "JSON backup saved to file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(com.example.R.string.json_saved), Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Failed to export JSON file: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(com.example.R.string.file_export_failed, "JSON", e.message ?: ""), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -141,13 +143,13 @@ fun DocsScreen(
                     if (content.isNotBlank()) {
                         viewModel.importJson(content) { result ->
                             result.fold(
-                                onSuccess = { count -> Toast.makeText(context, "Restored $count records for this user", Toast.LENGTH_SHORT).show() },
-                                onFailure = { error -> Toast.makeText(context, "Restore failed: ${error.message}", Toast.LENGTH_LONG).show() }
+                                onSuccess = { count -> Toast.makeText(context, context.getString(com.example.R.string.restore_records, count), Toast.LENGTH_SHORT).show() },
+                                onFailure = { error -> Toast.makeText(context, context.getString(com.example.R.string.restore_failed, error.message ?: ""), Toast.LENGTH_LONG).show() }
                             )
                         }
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Failed to read JSON file: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(com.example.R.string.file_read_failed, "JSON", e.message ?: ""), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -164,9 +166,9 @@ fun DocsScreen(
                     context.contentResolver.openOutputStream(it)?.use { stream ->
                         stream.write(csv.toByteArray(Charsets.UTF_8))
                     }
-                    Toast.makeText(context, "CSV exported to file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(com.example.R.string.csv_exported), Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Failed to export CSV file: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(com.example.R.string.file_export_failed, "CSV", e.message ?: ""), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -184,10 +186,10 @@ fun DocsScreen(
                     } ?: ""
                     if (content.isNotBlank()) {
                         viewModel.importCsv(content)
-                        Toast.makeText(context, "CSV imported successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(com.example.R.string.csv_imported), Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Failed to read CSV file: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(com.example.R.string.file_read_failed, "CSV", e.message ?: ""), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -201,13 +203,13 @@ fun DocsScreen(
         item {
             Column {
                 Text(
-                    text = "Settings",
+                    text = stringResource(com.example.R.string.settings),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Export statements, file backup/restore & configure preferences",
+                    text = stringResource(com.example.R.string.settings_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -222,13 +224,13 @@ fun DocsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = "Private, user-scoped backups",
+                        text = stringResource(com.example.R.string.private_backups),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "Each JSON file has its own backup identity. Restore remaps accounts, categories, loans, transactions, wishlist items, and journal entries to the signed-in user without reusing another user's IDs.",
+                        text = stringResource(com.example.R.string.private_backups_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                     )
@@ -267,12 +269,12 @@ fun DocsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Export Statement (PDF)",
+                                text = stringResource(com.example.R.string.export_statement_pdf),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "A4 financial summary with dual AD/BS dates & account snapshots.",
+                                text = stringResource(com.example.R.string.pdf_description),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -315,9 +317,9 @@ fun DocsScreen(
                                         saved = false
                                     }
                                     if (saved) {
-                                        Toast.makeText(context, "Saved $fileName to Downloads", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, context.getString(com.example.R.string.saved_to_downloads, fileName), Toast.LENGTH_LONG).show()
                                     } else {
-                                        Toast.makeText(context, "Failed to save PDF to Downloads", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(com.example.R.string.pdf_save_failed), Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             },
@@ -332,7 +334,7 @@ fun DocsScreen(
                         ) {
                             Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Save PDF", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(com.example.R.string.save_pdf), fontWeight = FontWeight.SemiBold)
                         }
 
                         OutlinedButton(
@@ -350,7 +352,7 @@ fun DocsScreen(
                         ) {
                             Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Preview PDF", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(com.example.R.string.preview_pdf), fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -378,12 +380,12 @@ fun DocsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Full Database Backup (JSON)",
+                                text = stringResource(com.example.R.string.full_database_backup),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Complete snapshot of accounts, transactions, loans, wishlist & journal.",
+                                text = stringResource(com.example.R.string.database_backup_description),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -411,7 +413,7 @@ fun DocsScreen(
                         ) {
                             Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Save File", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(com.example.R.string.save_file), fontWeight = FontWeight.SemiBold)
                         }
 
                         OutlinedButton(
@@ -427,7 +429,7 @@ fun DocsScreen(
                         ) {
                             Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Open File", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(com.example.R.string.open_file), fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -442,7 +444,7 @@ fun DocsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (showJsonTextTools) "Hide Clipboard Tools" else "Clipboard Tools (Text)",
+                            text = if (showJsonTextTools) stringResource(com.example.R.string.hide_clipboard_tools) else stringResource(com.example.R.string.clipboard_text_tools),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -473,7 +475,7 @@ fun DocsScreen(
                                 ) {
                                     Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("View Text", fontSize = 12.sp)
+                                    Text(stringResource(com.example.R.string.view_text), fontSize = 12.sp)
                                 }
                             }
                             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -483,7 +485,7 @@ fun DocsScreen(
                                 ) {
                                     Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Paste Text", fontSize = 12.sp)
+                                    Text(stringResource(com.example.R.string.paste_text), fontSize = 12.sp)
                                 }
                             }
                         }
@@ -513,12 +515,12 @@ fun DocsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Transactions Spreadsheet (CSV)",
+                                text = stringResource(com.example.R.string.transactions_csv),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Export transactions with dual AD/BS dates or bulk import CSV rows.",
+                                text = stringResource(com.example.R.string.csv_description),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -546,7 +548,7 @@ fun DocsScreen(
                         ) {
                             Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Export File", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(com.example.R.string.export_file), fontWeight = FontWeight.SemiBold)
                         }
 
                         OutlinedButton(
@@ -562,7 +564,7 @@ fun DocsScreen(
                         ) {
                             Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Import File", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(com.example.R.string.import_file), fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -577,7 +579,7 @@ fun DocsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (showCsvTextTools) "Hide Clipboard Tools" else "Clipboard Tools (CSV)",
+                            text = if (showCsvTextTools) stringResource(com.example.R.string.hide_clipboard_tools) else stringResource(com.example.R.string.clipboard_csv_tools),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -608,7 +610,7 @@ fun DocsScreen(
                                 ) {
                                     Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("View CSV", fontSize = 12.sp)
+                                    Text(stringResource(com.example.R.string.view_csv), fontSize = 12.sp)
                                 }
                             }
                             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -618,7 +620,7 @@ fun DocsScreen(
                                 ) {
                                     Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Paste CSV", fontSize = 12.sp)
+                                    Text(stringResource(com.example.R.string.paste_csv), fontSize = 12.sp)
                                 }
                             }
                         }
@@ -640,48 +642,75 @@ fun DocsScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "App Settings",
+                        text = stringResource(com.example.R.string.app_settings),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
 
                     // Currency Switcher
                     Column {
-                        Text("Default Currency", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(com.example.R.string.default_currency), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
                                 selected = currency == "NPR",
                                 onClick = { viewModel.setCurrency("NPR") },
-                                label = { Text("NPR (Nepalese Rupee)") }
+                                label = { Text(stringResource(com.example.R.string.npr_currency)) }
                             )
                             FilterChip(
                                 selected = currency == "USD",
                                 onClick = { viewModel.setCurrency("USD") },
-                                label = { Text("USD ($)") }
+                                label = { Text(stringResource(com.example.R.string.usd_currency)) }
+                            )
+                        }
+                    }
+
+                    // Language Selector
+                    Column {
+                        Text(stringResource(com.example.R.string.language), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = language == "en",
+                                onClick = {
+                                    viewModel.setLanguage("en")
+                                    (context as? android.app.Activity)?.recreate()
+                                },
+                                label = { Text(stringResource(com.example.R.string.english)) }
+                            )
+                            FilterChip(
+                                selected = language == "ne",
+                                onClick = {
+                                    viewModel.setLanguage("ne")
+                                    (context as? android.app.Activity)?.recreate()
+                                },
+                                label = { Text(stringResource(com.example.R.string.nepali)) }
                             )
                         }
                     }
 
                     // Theme Selector
                     Column {
-                        Text("Theme Mode", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(com.example.R.string.theme_mode), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
                                 selected = themeMode == "SYSTEM",
                                 onClick = { viewModel.setThemeMode("SYSTEM") },
-                                label = { Text("System") }
+                                label = { Text(stringResource(com.example.R.string.system)) }
                             )
                             FilterChip(
                                 selected = themeMode == "LIGHT",
                                 onClick = { viewModel.setThemeMode("LIGHT") },
-                                label = { Text("Light") }
+                                label = { Text(stringResource(com.example.R.string.light)) }
                             )
                             FilterChip(
                                 selected = themeMode == "DARK",
                                 onClick = { viewModel.setThemeMode("DARK") },
-                                label = { Text("Dark") }
+                                label = { Text(stringResource(com.example.R.string.dark)) }
                             )
                         }
                     }
@@ -706,14 +735,14 @@ fun DocsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Allow Negative Balances",
+                                    text = stringResource(com.example.R.string.allow_negative_balances),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "When enabled, expenses won't be blocked by strict balance overdraft protection.",
+                                text = stringResource(com.example.R.string.negative_balance_description),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -743,7 +772,7 @@ fun DocsScreen(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Account Profile",
+                        text = stringResource(com.example.R.string.account_profile),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -784,7 +813,7 @@ fun DocsScreen(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Log Out", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(com.example.R.string.log_out), fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -800,26 +829,26 @@ fun DocsScreen(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "About Sfinance",
+                        text = stringResource(com.example.R.string.about_sfinance),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Developed by Sarmila Adhikari",
+                        text = stringResource(com.example.R.string.developer_name),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = EmeraldPrimary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Offline-first personal finance management and mindfulness journal with dual AD/BS Bikram Sambat calendar system.",
+                        text = stringResource(com.example.R.string.about_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Version 1.0.0",
+                        text = stringResource(com.example.R.string.version),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -832,10 +861,10 @@ fun DocsScreen(
     showJsonExportDialog?.let { json ->
         AlertDialog(
             onDismissRequest = { showJsonExportDialog = null },
-            title = { Text("Exported JSON") },
+            title = { Text(stringResource(com.example.R.string.exported_json)) },
             text = {
                 Column {
-                    Text("Copy or share your complete JSON backup:", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(com.example.R.string.copy_share_json), style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = json.take(1000) + if (json.length > 1000) "\n... (${json.length} characters)" else "",
@@ -849,7 +878,7 @@ fun DocsScreen(
                 Button(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Finance Backup JSON", json))
+                        clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(com.example.R.string.json_clipboard_label), json))
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, json)
@@ -860,12 +889,12 @@ fun DocsScreen(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {
-                    Text("Copy & Share")
+                    Text(stringResource(com.example.R.string.copy_share))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showJsonExportDialog = null }) {
-                    Text("Close")
+                    Text(stringResource(com.example.R.string.close))
                 }
             }
         )
@@ -875,16 +904,16 @@ fun DocsScreen(
     if (showJsonImportDialog) {
         AlertDialog(
             onDismissRequest = { showJsonImportDialog = false },
-            title = { Text("Import JSON Backup") },
+            title = { Text(stringResource(com.example.R.string.import_json_backup)) },
             text = {
                 Column {
-                    Text("Paste JSON backup content to import records:", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(com.example.R.string.paste_json), style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = jsonImportText,
                         onValueChange = { jsonImportText = it },
                         modifier = Modifier.height(200.dp),
-                        placeholder = { Text("{\n  \"accounts\": [...],\n  \"transactions\": [...]\n}") }
+                        placeholder = { Text(stringResource(com.example.R.string.json_placeholder)) }
                     )
                 }
             },
@@ -905,12 +934,12 @@ fun DocsScreen(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {
-                    Text("Import")
+                    Text(stringResource(com.example.R.string.import))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showJsonImportDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(com.example.R.string.cancel))
                 }
             }
         )
@@ -920,10 +949,10 @@ fun DocsScreen(
     showCsvExportDialog?.let { csv ->
         AlertDialog(
             onDismissRequest = { showCsvExportDialog = null },
-            title = { Text("Exported Transactions CSV") },
+            title = { Text(stringResource(com.example.R.string.exported_csv)) },
             text = {
                 Column {
-                    Text("Copy or share your CSV export:", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(com.example.R.string.copy_share_csv), style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = csv.take(1000) + if (csv.length > 1000) "\n... (${csv.length} characters)" else "",
@@ -937,7 +966,7 @@ fun DocsScreen(
                 Button(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Transactions CSV", csv))
+                        clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(com.example.R.string.csv_clipboard_label), csv))
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, csv)
@@ -948,12 +977,12 @@ fun DocsScreen(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {
-                    Text("Copy & Share")
+                    Text(stringResource(com.example.R.string.copy_share))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCsvExportDialog = null }) {
-                    Text("Close")
+                    Text(stringResource(com.example.R.string.close))
                 }
             }
         )
@@ -963,16 +992,16 @@ fun DocsScreen(
     if (showCsvImportDialog) {
         AlertDialog(
             onDismissRequest = { showCsvImportDialog = false },
-            title = { Text("Import Transactions CSV") },
+            title = { Text(stringResource(com.example.R.string.import_csv_backup)) },
             text = {
                 Column {
-                    Text("Paste CSV content (with header row) to bulk import transactions:", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(com.example.R.string.paste_csv_content), style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = csvImportText,
                         onValueChange = { csvImportText = it },
                         modifier = Modifier.height(200.dp),
-                        placeholder = { Text("ID,Type,Name,Amount,Date_AD,Date_BS,Account_From,Account_To,Category,Notes") }
+                        placeholder = { Text(stringResource(com.example.R.string.csv_placeholder)) }
                     )
                 }
             },
@@ -988,12 +1017,12 @@ fun DocsScreen(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {
-                    Text("Import CSV")
+                    Text(stringResource(com.example.R.string.import_csv))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCsvImportDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(com.example.R.string.cancel))
                 }
             }
         )

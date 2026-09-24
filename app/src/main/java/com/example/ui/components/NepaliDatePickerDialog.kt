@@ -47,6 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.nepali.NepaliDateConverter
 import java.util.Calendar
 
@@ -93,7 +95,7 @@ fun NepaliDatePickerDialog(
         title = {
             Column {
                 Text(
-                    text = "Select Date (Dual AD / BS)",
+                    text = stringResource(R.string.select_date_dual),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -112,12 +114,12 @@ fun NepaliDatePickerDialog(
                     Tab(
                         selected = modeTab == 0,
                         onClick = { modeTab = 0 },
-                        text = { Text("BS (Bikram Sambat)") }
+                        text = { Text(stringResource(R.string.bs_bikram_sambat)) }
                     )
                     Tab(
                         selected = modeTab == 1,
                         onClick = { modeTab = 1 },
-                        text = { Text("AD (Gregorian)") }
+                        text = { Text(stringResource(R.string.ad_gregorian)) }
                     )
                 }
 
@@ -152,12 +154,12 @@ fun NepaliDatePickerDialog(
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous Month")
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.previous_month))
                         }
 
                         // Month selector dropdown
                         PickerDropdown(
-                            label = "Month",
+                            label = stringResource(R.string.month),
                             selectedText = NepaliDateConverter.nepaliMonths.getOrElse(selectedBsMonth - 1) { "Month" },
                             items = NepaliDateConverter.nepaliMonths,
                             modifier = Modifier.weight(1.3f),
@@ -173,7 +175,7 @@ fun NepaliDatePickerDialog(
 
                         // Year selector dropdown
                         PickerDropdown(
-                            label = "Year",
+                            label = stringResource(R.string.year),
                             selectedText = "$selectedBsYear BS",
                             items = (2070..2090).map { "$it" },
                             modifier = Modifier.weight(1f),
@@ -209,7 +211,7 @@ fun NepaliDatePickerDialog(
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next Month")
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.next_month))
                         }
                     }
 
@@ -266,12 +268,12 @@ fun NepaliDatePickerDialog(
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous Month")
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.previous_month))
                         }
 
                         // Month selector dropdown
                         PickerDropdown(
-                            label = "Month",
+                            label = stringResource(R.string.month),
                             selectedText = adMonths.getOrElse(selectedAdMonth - 1) { "Month" },
                             items = adMonths,
                             modifier = Modifier.weight(1.3f),
@@ -290,7 +292,7 @@ fun NepaliDatePickerDialog(
 
                         // Year selector dropdown
                         PickerDropdown(
-                            label = "Year",
+                            label = stringResource(R.string.year),
                             selectedText = "$selectedAdYear AD",
                             items = (2020..2035).map { "$it" },
                             modifier = Modifier.weight(1f),
@@ -331,7 +333,7 @@ fun NepaliDatePickerDialog(
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next Month")
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.next_month))
                         }
                     }
 
@@ -370,7 +372,7 @@ fun NepaliDatePickerDialog(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Today")
+                        Text(stringResource(R.string.today))
                     }
                     OutlinedButton(
                         onClick = {
@@ -379,7 +381,7 @@ fun NepaliDatePickerDialog(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Yesterday")
+                        Text(stringResource(R.string.yesterday))
                     }
                 }
             }
@@ -392,12 +394,12 @@ fun NepaliDatePickerDialog(
                 },
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Select")
+                  Text(stringResource(R.string.select))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                  Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -521,7 +523,7 @@ fun PickerDropdown(
                 }
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Select $label",
+                      contentDescription = stringResource(R.string.select_label, label),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )

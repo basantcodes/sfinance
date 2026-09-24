@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.data.local.entities.Budget
 import com.example.data.local.entities.Category
@@ -61,7 +63,7 @@ fun BudgetDialog(
         tonalElevation = 6.dp,
         title = {
             Text(
-                text = if (budgetToEdit == null) "Set Category Budget" else "Edit Budget",
+                text = stringResource(if (budgetToEdit == null) R.string.new_budget else R.string.edit_budget),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -79,8 +81,8 @@ fun BudgetDialog(
                             .clickable { catMenuExpanded = true }
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Expense Category", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                            Text(selectedCategory?.name ?: "Select Category", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.expense_category), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(selectedCategory?.name ?: stringResource(R.string.select_category), fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -104,7 +106,7 @@ fun BudgetDialog(
                 OutlinedTextField(
                     value = limitStr,
                     onValueChange = { limitStr = it },
-                    label = { Text("Monthly Limit ($currency)*") },
+                    label = { Text(stringResource(R.string.monthly_limit_required, currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -117,9 +119,9 @@ fun BudgetDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Rollover Balance", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.rollover_balance), fontWeight = FontWeight.SemiBold)
                         Text(
-                            "Carry over unspent budget to next month",
+                            stringResource(R.string.rollover_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -136,23 +138,23 @@ fun BudgetDialog(
             Button(
                 onClick = {
                     if (selectedCategoryId.isBlank()) {
-                        errorMessage = "Please select a category"
+                        errorMessage = stringResource(R.string.select_category_error)
                         return@Button
                     }
                     val limit = limitStr.toDoubleOrNull()
                     if (limit == null || limit <= 0) {
-                        errorMessage = "Please enter a valid monthly limit"
+                        errorMessage = stringResource(R.string.valid_monthly_limit)
                         return@Button
                     }
                     onSaveBudget(selectedCategoryId, limit, rollover)
                 }
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

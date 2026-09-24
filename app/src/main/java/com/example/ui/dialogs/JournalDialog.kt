@@ -40,6 +40,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.JournalEntry
 import com.example.data.local.entities.Mood
 import com.example.data.nepali.NepaliDateConverter
@@ -73,7 +75,7 @@ fun JournalDialog(
         tonalElevation = 6.dp,
         title = {
             Text(
-                text = if (entryToEdit == null) "New Journal Entry" else "Edit Journal Entry",
+                text = stringResource(if (entryToEdit == null) R.string.new_journal_entry else R.string.edit_journal_entry),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -87,7 +89,7 @@ fun JournalDialog(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 // Mood selector
-                Text(text = "How are you feeling?", style = MaterialTheme.typography.labelMedium)
+                Text(text = stringResource(R.string.feeling_prompt), style = MaterialTheme.typography.labelMedium)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround
@@ -134,10 +136,10 @@ fun JournalDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Date (Dual AD / BS)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.date_dual), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                             Text(NepaliDateConverter.formatDualDate(selectedDate), fontWeight = FontWeight.SemiBold)
                         }
-                        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = "Pick Date", tint = MaterialTheme.colorScheme.primary)
+                        Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = stringResource(R.string.pick_date), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
 
@@ -145,7 +147,7 @@ fun JournalDialog(
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
-                    label = { Text("Write your thoughts...") },
+                    label = { Text(stringResource(R.string.write_thoughts)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp),
@@ -162,18 +164,18 @@ fun JournalDialog(
             Button(
                 onClick = {
                     if (content.isBlank()) {
-                        errorMessage = "Journal content cannot be empty"
+                        errorMessage = stringResource(R.string.journal_empty_error)
                         return@Button
                     }
                     onSaveEntry(content.trim(), selectedMood, selectedDate)
                 }
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

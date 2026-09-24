@@ -48,6 +48,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.components.EmptyStateCard
 import com.example.data.local.entities.Account
 import com.example.ui.components.formatAmount
@@ -78,7 +80,7 @@ fun AccountsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${accounts.size} active accounts",
+                    text = stringResource(R.string.active_accounts_count, accounts.size),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
@@ -91,7 +93,7 @@ fun AccountsScreen(
                     ) {
                         Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Recalculate")
+                        Text(stringResource(R.string.recalculate))
                     }
                 }
             }
@@ -105,7 +107,7 @@ fun AccountsScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "TOTAL LIQUID & INVESTED",
+                            text = stringResource(R.string.total_liquid_invested),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                             fontWeight = FontWeight.Bold
@@ -124,9 +126,9 @@ fun AccountsScreen(
             if (accounts.isEmpty()) {
                 item {
                     EmptyStateCard(
-                        title = "No accounts yet",
-                        subtitle = "Create your first account to start tracking balances, cash flow, and savings.",
-                        actionLabel = "+ Create First Account",
+                        title = stringResource(R.string.no_accounts),
+                        subtitle = stringResource(R.string.first_account_description),
+                        actionLabel = stringResource(R.string.create_first_account),
                         onAction = onOpenAddAccount,
                         icon = "🏦",
                         accentColor = EmeraldPrimary
@@ -151,9 +153,9 @@ fun AccountsScreen(
     accountToDelete?.let { acc ->
         AlertDialog(
             onDismissRequest = { accountToDelete = null },
-            title = { Text("Delete Account") },
+            title = { Text(stringResource(R.string.delete_account)) },
             text = {
-                Text("Are you sure you want to delete '${acc.name}'? Accounts with existing linked transactions cannot be deleted.")
+                Text(stringResource(R.string.delete_account_confirmation, acc.name))
             },
             confirmButton = {
                 TextButton(
@@ -162,12 +164,12 @@ fun AccountsScreen(
                         accountToDelete = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { accountToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -243,10 +245,10 @@ fun AccountCardItem(
                 )
                 Row {
                     IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit), modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }

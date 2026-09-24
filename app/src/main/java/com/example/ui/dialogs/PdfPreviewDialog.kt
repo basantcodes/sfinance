@@ -53,6 +53,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.ui.theme.EmeraldPrimary
@@ -121,12 +123,12 @@ fun PdfPreviewDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                     }
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Statement Preview",
+                            text = stringResource(R.string.statement_preview),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -140,7 +142,7 @@ fun PdfPreviewDialog(
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = onShare) {
-                            Icon(Icons.Default.Share, contentDescription = "Share PDF", tint = EmeraldPrimary)
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.share_pdf), tint = EmeraldPrimary)
                         }
                     }
                 }
@@ -155,7 +157,7 @@ fun PdfPreviewDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Zoom: ${(scale * 100).toInt()}%",
+                        text = stringResource(R.string.zoom_percent, (scale * 100).toInt()),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium
                     )
@@ -165,21 +167,21 @@ fun PdfPreviewDialog(
                             onClick = { scale = (scale - 0.25f).coerceAtLeast(0.5f) },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.ZoomOut, contentDescription = "Zoom Out", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.ZoomOut, contentDescription = stringResource(R.string.zoom_out), modifier = Modifier.size(18.dp))
                         }
 
                         IconButton(
                             onClick = { scale = 1f },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.RestartAlt, contentDescription = "Reset Zoom", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.RestartAlt, contentDescription = stringResource(R.string.reset_zoom), modifier = Modifier.size(18.dp))
                         }
 
                         IconButton(
                             onClick = { scale = (scale + 0.25f).coerceAtMost(3f) },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.ZoomIn, contentDescription = "Zoom In", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.ZoomIn, contentDescription = stringResource(R.string.zoom_in), modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -208,7 +210,7 @@ fun PdfPreviewDialog(
                         ) {
                             Image(
                                 bitmap = bitmap!!.asImageBitmap(),
-                                contentDescription = "Statement PDF Preview",
+                                contentDescription = stringResource(R.string.statement_pdf_preview),
                                 contentScale = ContentScale.FillWidth,
                                 modifier = Modifier
                                     .padding(16.dp)
@@ -222,7 +224,7 @@ fun PdfPreviewDialog(
                         }
                     } else {
                         Text(
-                            text = "Failed to render PDF preview",
+                            text = stringResource(R.string.pdf_render_failed),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyMedium
                         )

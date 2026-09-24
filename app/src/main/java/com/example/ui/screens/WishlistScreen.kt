@@ -48,6 +48,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.WishlistItem
 import com.example.data.local.entities.WishlistStatus
 import com.example.data.nepali.NepaliDateConverter
@@ -92,7 +94,7 @@ fun WishlistScreen(
         item {
             Column {
                 Text(
-                    text = "Smart affordability planner & savings goals",
+                    text = stringResource(R.string.wishlist_intro),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -113,7 +115,7 @@ fun WishlistScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Total Planned Cost", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.total_planned_cost), style = MaterialTheme.typography.labelSmall)
                             Text(
                                 text = formatAmount(totalCost, currency),
                                 style = MaterialTheme.typography.titleMedium,
@@ -122,14 +124,14 @@ fun WishlistScreen(
                             )
                             if (totalCost <= 0.0) {
                                 Text(
-                                    text = "No items yet",
+                                    text = stringResource(R.string.no_items_yet),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
                                 )
                             }
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Liquid Cash Available", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.liquid_cash_available), style = MaterialTheme.typography.labelSmall)
                             Text(
                                 formatAmount(totalLiquid, currency),
                                 style = MaterialTheme.typography.titleMedium,
@@ -144,18 +146,18 @@ fun WishlistScreen(
             // Tabs
             item {
                 TabRow(selectedTabIndex = selectedTab) {
-                    Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Planned") })
-                    Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Purchased") })
-                    Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("All") })
+                    Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text(stringResource(R.string.planned)) })
+                    Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text(stringResource(R.string.purchased)) })
+                    Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text(stringResource(R.string.all)) })
                 }
             }
 
             if (filtered.isEmpty()) {
                 item {
                     EmptyStateCard(
-                        title = "Your wishlist is clear",
-                        subtitle = "Add a goal to compare affordability and plan purchases with confidence.",
-                        actionLabel = "+ Add Wishlist Item",
+                        title = stringResource(R.string.wishlist_clear),
+                        subtitle = stringResource(R.string.wishlist_clear_description),
+                        actionLabel = stringResource(R.string.add_wishlist_item),
                         onAction = onOpenAddWishlist,
                         icon = "🎯",
                         accentColor = EmeraldPrimary
@@ -185,10 +187,10 @@ fun WishlistScreen(
     itemToPurchase?.let { item ->
         AlertDialog(
             onDismissRequest = { itemToPurchase = null },
-            title = { Text("Mark as Purchased") },
+            title = { Text(stringResource(R.string.mark_purchased)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Purchased '${item.name}' for ${formatAmount(item.estimatedCost, currency)}.")
+                    Text(stringResource(R.string.purchased_for, item.name, formatAmount(item.estimatedCost, currency)))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
@@ -196,12 +198,12 @@ fun WishlistScreen(
                             onCheckedChange = { createExpenseChecked = it }
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Create Expense Transaction", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.create_expense_transaction), style = MaterialTheme.typography.bodyMedium)
                     }
 
                     if (createExpenseChecked) {
                         AccountPicker(
-                            label = "Debit From Account",
+                            label = stringResource(R.string.debit_from_account),
                             accounts = accounts,
                             selectedId = selectedAccountId,
                             onSelect = { selectedAccountId = it }
@@ -216,12 +218,12 @@ fun WishlistScreen(
                         itemToPurchase = null
                     }
                 ) {
-                    Text("Confirm")
+                    Text(stringResource(R.string.confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToPurchase = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -231,8 +233,8 @@ fun WishlistScreen(
     itemToDelete?.let { item ->
         AlertDialog(
             onDismissRequest = { itemToDelete = null },
-            title = { Text("Delete Wishlist Item") },
-            text = { Text("Are you sure you want to remove '${item.name}' from your wishlist?") },
+            title = { Text(stringResource(R.string.delete_wishlist_item)) },
+            text = { Text(stringResource(R.string.delete_wishlist_confirmation, item.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -240,12 +242,12 @@ fun WishlistScreen(
                         itemToDelete = null
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -305,7 +307,7 @@ fun WishlistCardItem(
             if (itemAff.savingsNeeded > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Savings needed: ${formatAmount(itemAff.savingsNeeded, currency)}",
+                    text = stringResource(R.string.savings_needed, formatAmount(itemAff.savingsNeeded, currency)),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFEF4444)
                 )
@@ -314,7 +316,7 @@ fun WishlistCardItem(
             item.preferredDate?.let { date ->
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Target: ${NepaliDateConverter.formatDualDate(date)}",
+                    text = stringResource(R.string.target_date, NepaliDateConverter.formatDualDate(date)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -341,14 +343,14 @@ fun WishlistCardItem(
                     ) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Mark Purchased", fontSize = 12.sp)
+                        Text(stringResource(R.string.mark_purchased_short), fontSize = 12.sp)
                     }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 IconButton(onClick = onDelete, modifier = Modifier.size(34.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
                 }
             }
         }

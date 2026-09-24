@@ -52,6 +52,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.theme.EmeraldDark
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.TealDark
@@ -113,14 +115,14 @@ fun AuthScreen(
                 )
 
                 Text(
-                    text = "Sfinance",
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = "Dual AD/BS Offline Ledger & Mindfulness",
+                    text = stringResource(R.string.app_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -132,7 +134,7 @@ fun AuthScreen(
                             selectedTab = 0
                             validationMessage = null
                         },
-                        text = { Text("Sign In") }
+                        text = { Text(stringResource(R.string.sign_in)) }
                     )
                     Tab(
                         selected = selectedTab == 1,
@@ -140,7 +142,7 @@ fun AuthScreen(
                             selectedTab = 1
                             validationMessage = null
                         },
-                        text = { Text("Register") }
+                        text = { Text(stringResource(R.string.register)) }
                     )
                 }
 
@@ -151,7 +153,7 @@ fun AuthScreen(
                             name = it
                             validationMessage = null
                         },
-                        label = { Text("Full Name") },
+                        label = { Text(stringResource(R.string.full_name)) },
                         leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -173,7 +175,7 @@ fun AuthScreen(
                         username = it
                         validationMessage = null
                     },
-                    label = { Text("Username") },
+                    label = { Text(stringResource(R.string.username)) },
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
                     singleLine = true,
@@ -195,14 +197,14 @@ fun AuthScreen(
                         password = it
                         validationMessage = null
                     },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.password)) },
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { showPassword = !showPassword }) {
                             Icon(
                                 imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (showPassword) "Hide password" else "Show password"
+                                contentDescription = stringResource(if (showPassword) R.string.hide_password else R.string.show_password)
                             )
                         }
                     },
@@ -250,10 +252,10 @@ fun AuthScreen(
                         onClick = {
                             if (!formIsValid) {
                                 validationMessage = when {
-                                    selectedTab == 1 && name.trim().length < 2 -> "Enter your full name"
-                                    !usernameIsValid -> "Username must be 3-64 characters without spaces"
-                                    password.length < 8 -> "Password must be at least 8 characters"
-                                    else -> "Please check your details"
+                                    selectedTab == 1 && name.trim().length < 2 -> stringResource(R.string.enter_full_name)
+                                    !usernameIsValid -> stringResource(R.string.username_length_error)
+                                    password.length < 8 -> stringResource(R.string.password_length_error)
+                                    else -> stringResource(R.string.check_details)
                                 }
                                 return@Button
                             }
@@ -281,7 +283,7 @@ fun AuthScreen(
                         interactionSource = buttonInteraction
                     ) {
                         Text(
-                            text = if (selectedTab == 0) "Login" else "Register",
+                            text = stringResource(if (selectedTab == 0) R.string.login else R.string.register),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )

@@ -1,6 +1,7 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
+import com.example.R
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.entities.User
 import com.example.data.repository.FinanceRepository
@@ -17,8 +18,8 @@ class AuthSettingsExportFeatureViewModel(
     suspend fun login(username: String, password: String): Result<User> {
         val result = repository.login(username, password)
         result.fold(
-            onSuccess = { emitEvent("Logged in as ${it.name}") },
-            onFailure = { err -> emitEvent(err.message ?: "Login failed") }
+            onSuccess = { emitEvent(app.getString(R.string.logged_in_as, it.name)) },
+            onFailure = { err -> emitEvent(err.message ?: app.getString(R.string.login_failed)) }
         )
         return result
     }
@@ -26,37 +27,41 @@ class AuthSettingsExportFeatureViewModel(
     suspend fun register(name: String, username: String, password: String): Result<User> {
         val result = repository.register(name, username, password)
         result.fold(
-            onSuccess = { emitEvent("Account created for ${it.name}") },
-            onFailure = { err -> emitEvent(err.message ?: "Registration failed") }
+            onSuccess = { emitEvent(app.getString(R.string.account_created_for, it.name)) },
+            onFailure = { err -> emitEvent(err.message ?: app.getString(R.string.registration_failed)) }
         )
         return result
     }
 
     fun logout() {
         repository.logout()
-        emitEvent("Signed out")
+        emitEvent(app.getString(R.string.signed_out))
     }
 
     suspend fun setCurrency(currency: String) {
         preferenceManager.setCurrency(currency)
-        emitEvent("Currency set to $currency")
+        emitEvent(app.getString(R.string.currency_set, currency))
     }
 
     suspend fun setThemeMode(mode: String) {
         preferenceManager.setThemeMode(mode)
-        emitEvent("Theme updated")
+        emitEvent(app.getString(R.string.theme_updated))
     }
 
     suspend fun setAllowNegativeBalance(allow: Boolean) {
         preferenceManager.setAllowNegativeBalance(allow)
-        emitEvent(if (allow) "Negative balances permitted" else "Negative balances strictly prevented")
+        emitEvent(app.getString(if (allow) R.string.negative_balances_permitted else R.string.negative_balances_prevented))
+    }
+
+    suspend fun setLanguage(language: String) {
+        preferenceManager.setLanguage(language)
     }
 
     suspend fun recalculateBalances(userId: String): Result<Unit> {
         val result = repository.recalculateBalances(userId)
         result.fold(
-            onSuccess = { emitEvent("Balances recalculated from transaction history") },
-            onFailure = { err -> emitEvent(err.message ?: "Recalculate failed") }
+            onSuccess = { emitEvent(app.getString(R.string.balances_recalculated)) },
+            onFailure = { err -> emitEvent(err.message ?: app.getString(R.string.recalculate_failed)) }
         )
         return result
     }
@@ -78,7 +83,7 @@ class AuthSettingsExportFeatureViewModel(
             currency = currency
         )
         onPdfReady(file)
-        emitEvent("PDF Statement generated: ${file.name}")
+        emitEvent(app.getString(R.string.pdf_generated, file.name))
     }
 
     suspend fun exportJson(userId: String): String = repository.exportFullJson(userId)
@@ -87,8 +92,8 @@ class AuthSettingsExportFeatureViewModel(
     suspend fun importJson(userId: String, json: String): Result<Int> {
         val result = repository.importFullJson(userId, json)
         result.fold(
-            onSuccess = { count -> emitEvent("Imported $count records from JSON") },
-            onFailure = { err -> emitEvent("Import failed: ${err.message}") }
+            onSuccess = { count -> emitEvent(app.getString(R.string.records_imported, count)) },
+            onFailure = { err -> emitEvent(app.getString(R.string.import_failed, err.message ?: "")) }
         )
         return result
     }
@@ -96,8 +101,8 @@ class AuthSettingsExportFeatureViewModel(
     suspend fun importCsv(userId: String, csv: String): Result<Int> {
         val result = repository.importTransactionsCsv(userId, csv)
         result.fold(
-            onSuccess = { count -> emitEvent("Imported $count transactions from CSV") },
-            onFailure = { err -> emitEvent("CSV import failed: ${err.message}") }
+            onSuccess = { count -> emitEvent(app.getString(R.string.transactions_imported, count)) },
+            onFailure = { err -> emitEvent(app.getString(R.string.csv_import_failed, err.message ?: "")) }
         )
         return result
     }

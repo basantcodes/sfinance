@@ -45,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.data.local.entities.Account
 import com.example.data.local.entities.Category
 import com.example.data.local.entities.CategoryType
@@ -139,7 +141,7 @@ fun TransactionDialog(
         tonalElevation = 6.dp,
         title = {
             Text(
-                text = if (transactionToEdit == null) "New Transaction" else "Edit Transaction",
+                text = stringResource(if (transactionToEdit == null) R.string.new_transaction else R.string.edit_transaction),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -157,17 +159,17 @@ fun TransactionDialog(
                     Tab(
                         selected = selectedTypeTab == 0,
                         onClick = { selectedTypeTab = 0 },
-                        text = { Text("Expense") }
+                        text = { Text(stringResource(R.string.expense)) }
                     )
                     Tab(
                         selected = selectedTypeTab == 1,
                         onClick = { selectedTypeTab = 1 },
-                        text = { Text("Income") }
+                        text = { Text(stringResource(R.string.income)) }
                     )
                     Tab(
                         selected = selectedTypeTab == 2,
                         onClick = { selectedTypeTab = 2 },
-                        text = { Text("Transfer") }
+                        text = { Text(stringResource(R.string.transfer)) }
                     )
                 }
 
@@ -175,7 +177,7 @@ fun TransactionDialog(
                 OutlinedTextField(
                     value = amountStr,
                     onValueChange = { amountStr = it },
-                    label = { Text("Amount ($currency)*") },
+                    label = { Text(stringResource(R.string.amount_currency_required, currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -185,7 +187,7 @@ fun TransactionDialog(
                 OutlinedTextField(
                     value = nameStr,
                     onValueChange = { nameStr = it },
-                    label = { Text("Description / Name") },
+                    label = { Text(stringResource(R.string.description_name)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -205,7 +207,7 @@ fun TransactionDialog(
                     ) {
                         Column {
                             Text(
-                                text = "Date (Dual AD / BS)",
+                                text = stringResource(R.string.date_dual),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -217,7 +219,7 @@ fun TransactionDialog(
                         }
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = "Pick Date",
+                            contentDescription = stringResource(R.string.pick_date),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -227,7 +229,7 @@ fun TransactionDialog(
                 when (currentType) {
                     TransactionType.EXPENSE -> {
                         AccountPicker(
-                            label = "Debit From Account*",
+                              label = stringResource(R.string.debit_from_account_required),
                             accounts = accounts,
                             selectedId = selectedFromAccountId,
                             onSelect = { selectedFromAccountId = it }
@@ -235,7 +237,7 @@ fun TransactionDialog(
                     }
                     TransactionType.INCOME -> {
                         AccountPicker(
-                            label = "Credit To Account*",
+                              label = stringResource(R.string.credit_to_account_required),
                             accounts = accounts,
                             selectedId = selectedToAccountId,
                             onSelect = { selectedToAccountId = it }
@@ -247,7 +249,7 @@ fun TransactionDialog(
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("Balance transfer", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                  Text(stringResource(R.string.balance_transfer), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                 Text(
                                     "The destination receives the transfer amount. Any fee is charged separately to the source account.",
                                     style = MaterialTheme.typography.bodySmall,
@@ -256,13 +258,13 @@ fun TransactionDialog(
                             }
                         }
                         AccountPicker(
-                            label = "Source (From Account)*",
+                              label = stringResource(R.string.source_account_required),
                             accounts = accounts,
                             selectedId = selectedFromAccountId,
                             onSelect = { selectedFromAccountId = it }
                         )
                         AccountPicker(
-                            label = "Destination (To Account)*",
+                              label = stringResource(R.string.destination_account_required),
                             accounts = accounts,
                             selectedId = selectedToAccountId,
                             onSelect = { selectedToAccountId = it }
@@ -270,8 +272,8 @@ fun TransactionDialog(
                         OutlinedTextField(
                             value = feeStr,
                             onValueChange = { feeStr = it },
-                            label = { Text("Transfer Fee ($currency, optional)") },
-                            supportingText = { Text("Paid by the source account") },
+                              label = { Text(stringResource(R.string.transfer_fee, currency)) },
+                              supportingText = { Text(stringResource(R.string.paid_by_source)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
@@ -304,7 +306,7 @@ fun TransactionDialog(
                             )
                         }
                         IconButton(onClick = { showCreateCategoryDialog = true }) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Category")
+                              Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.add_category))
                         }
                     }
                 }
@@ -313,7 +315,7 @@ fun TransactionDialog(
                 OutlinedTextField(
                     value = notesStr,
                     onValueChange = { notesStr = it },
-                    label = { Text("Notes (optional)") },
+                    label = { Text(stringResource(R.string.notes_optional)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 2
                 )
@@ -373,12 +375,12 @@ fun TransactionDialog(
                     )
                 }
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -398,12 +400,12 @@ fun TransactionDialog(
     if (showCreateCategoryDialog) {
         AlertDialog(
             onDismissRequest = { showCreateCategoryDialog = false },
-            title = { Text("New Category") },
+            title = { Text(stringResource(R.string.new_category)) },
             text = {
                 OutlinedTextField(
                     value = newCategoryName,
                     onValueChange = { newCategoryName = it },
-                    label = { Text("Category Name") },
+                    label = { Text(stringResource(R.string.category_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -419,12 +421,12 @@ fun TransactionDialog(
                         }
                     }
                 ) {
-                    Text("Add")
+                    Text(stringResource(R.string.add))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCreateCategoryDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -468,7 +470,7 @@ fun AccountPicker(
                         Column {
                             Text(acc.name, fontWeight = FontWeight.SemiBold)
                             Text(
-                                text = "Bal: ${acc.currency} ${String.format("%.2f", acc.balance)} • ${acc.type}",
+                                  text = stringResource(R.string.account_balance_type, acc.currency, String.format("%.2f", acc.balance), acc.type),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -500,7 +502,7 @@ fun CategoryPicker(
                 .clickable { expanded = true }
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(text = "Category", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                Text(text = stringResource(R.string.category), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 Text(
                     text = selectedCategory?.name ?: "Select Category",
                     style = MaterialTheme.typography.bodyMedium,
