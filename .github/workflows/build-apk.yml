@@ -66,3 +66,9 @@ jobs:
         with:
           name: app-release-apk
           path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Print APK identity
+        shell: bash
+        run: |
+          echo "Package: com.aistudio.applet.eafovh"
+          keytool -printcert -jarfile app/build/outputs/apk/release/app-release.apk | grep -E 'Owner:|SHA256:'
