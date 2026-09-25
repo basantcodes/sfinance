@@ -66,6 +66,8 @@ fun AccountDialog(
 
     var typeMenuExpanded by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val accountNameRequiredMessage = stringResource(R.string.account_name_required)
+    val initialBalanceNegativeMessage = stringResource(R.string.initial_balance_negative)
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -173,12 +175,12 @@ fun AccountDialog(
             Button(
                 onClick = {
                     if (name.isBlank()) {
-                        errorMessage = stringResource(R.string.account_name_required)
+                        errorMessage = accountNameRequiredMessage
                         return@Button
                     }
                     val balance = balanceStr.toDoubleOrNull()
                     if (balance == null || balance < 0) {
-                        errorMessage = stringResource(R.string.initial_balance_negative)
+                        errorMessage = initialBalanceNegativeMessage
                         return@Button
                     }
 

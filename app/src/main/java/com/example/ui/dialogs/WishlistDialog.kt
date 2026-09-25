@@ -67,6 +67,8 @@ fun WishlistDialog(
     var priorityExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val itemNameErrorMessage = stringResource(R.string.item_name_error)
+    val validEstimatedCostMessage = stringResource(R.string.valid_estimated_cost)
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -181,12 +183,12 @@ fun WishlistDialog(
             Button(
                 onClick = {
                     if (name.isBlank()) {
-                        errorMessage = stringResource(R.string.item_name_error)
+                        errorMessage = itemNameErrorMessage
                         return@Button
                     }
                     val cost = costStr.toDoubleOrNull()
                     if (cost == null || cost <= 0) {
-                        errorMessage = stringResource(R.string.valid_estimated_cost)
+                        errorMessage = validEstimatedCostMessage
                         return@Button
                     }
                     onSaveItem(name.trim(), cost, priority, preferredDate, category.ifBlank { null }, notes.ifBlank { null })

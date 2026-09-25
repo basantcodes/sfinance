@@ -76,6 +76,10 @@ fun AuthScreen(
 
     val usernameIsValid = username.trim().matches(Regex("^\\S{3,64}$"))
     val formIsValid = usernameIsValid && password.length >= 8 && (selectedTab == 0 || name.trim().length >= 2)
+    val enterFullNameMessage = stringResource(R.string.enter_full_name)
+    val usernameLengthErrorMessage = stringResource(R.string.username_length_error)
+    val passwordLengthErrorMessage = stringResource(R.string.password_length_error)
+    val checkDetailsMessage = stringResource(R.string.check_details)
 
     Box(
         modifier = Modifier
@@ -252,10 +256,10 @@ fun AuthScreen(
                         onClick = {
                             if (!formIsValid) {
                                 validationMessage = when {
-                                    selectedTab == 1 && name.trim().length < 2 -> stringResource(R.string.enter_full_name)
-                                    !usernameIsValid -> stringResource(R.string.username_length_error)
-                                    password.length < 8 -> stringResource(R.string.password_length_error)
-                                    else -> stringResource(R.string.check_details)
+                                    selectedTab == 1 && name.trim().length < 2 -> enterFullNameMessage
+                                    !usernameIsValid -> usernameLengthErrorMessage
+                                    password.length < 8 -> passwordLengthErrorMessage
+                                    else -> checkDetailsMessage
                                 }
                                 return@Button
                             }

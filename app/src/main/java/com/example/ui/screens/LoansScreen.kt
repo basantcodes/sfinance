@@ -202,6 +202,9 @@ fun LoansScreen(
 
     // Repay Confirmation Dialog
     loanToRepay?.let { loan ->
+        val positivePaymentErrorMessage = stringResource(R.string.positive_payment_error)
+        val paymentExceedsBalanceMessage = stringResource(R.string.payment_exceeds_balance)
+        val selectSettlementAccountMessage = stringResource(R.string.select_settlement_account)
         AlertDialog(
             onDismissRequest = { loanToRepay = null },
             title = { Text(stringResource(R.string.record_loan_payment)) },
@@ -248,13 +251,13 @@ fun LoansScreen(
                         val amount = repaymentAmountStr.toDoubleOrNull()
                         when {
                             amount == null || !amount.isFinite() || amount <= 0 -> {
-                                repaymentError = stringResource(R.string.positive_payment_error)
+                                repaymentError = positivePaymentErrorMessage
                             }
                             amount > loan.remainingAmount + 0.0001 -> {
-                                repaymentError = stringResource(R.string.payment_exceeds_balance)
+                                repaymentError = paymentExceedsBalanceMessage
                             }
                             repayAccountId == null -> {
-                                repaymentError = stringResource(R.string.select_settlement_account)
+                                repaymentError = selectSettlementAccountMessage
                             }
                             else -> {
                                 viewModel.markLoanRepaid(loan, repayAccountId, amount)

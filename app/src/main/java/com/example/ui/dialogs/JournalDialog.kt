@@ -59,6 +59,7 @@ fun JournalDialog(
     var selectedDate by remember { mutableLongStateOf(entryToEdit?.date ?: System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val journalEmptyErrorMessage = stringResource(R.string.journal_empty_error)
 
     val moods = listOf(
         Mood.HAPPY.name to "😊",
@@ -164,7 +165,7 @@ fun JournalDialog(
             Button(
                 onClick = {
                     if (content.isBlank()) {
-                        errorMessage = stringResource(R.string.journal_empty_error)
+                        errorMessage = journalEmptyErrorMessage
                         return@Button
                     }
                     onSaveEntry(content.trim(), selectedMood, selectedDate)

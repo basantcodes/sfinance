@@ -55,6 +55,8 @@ fun BudgetDialog(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val selectedCategory = categories.firstOrNull { it.id == selectedCategoryId }
+    val selectCategoryErrorMessage = stringResource(R.string.select_category_error)
+    val validMonthlyLimitMessage = stringResource(R.string.valid_monthly_limit)
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -138,12 +140,12 @@ fun BudgetDialog(
             Button(
                 onClick = {
                     if (selectedCategoryId.isBlank()) {
-                        errorMessage = stringResource(R.string.select_category_error)
+                        errorMessage = selectCategoryErrorMessage
                         return@Button
                     }
                     val limit = limitStr.toDoubleOrNull()
                     if (limit == null || limit <= 0) {
-                        errorMessage = stringResource(R.string.valid_monthly_limit)
+                        errorMessage = validMonthlyLimitMessage
                         return@Button
                     }
                     onSaveBudget(selectedCategoryId, limit, rollover)
