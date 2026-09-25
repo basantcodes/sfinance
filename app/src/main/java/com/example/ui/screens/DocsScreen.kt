@@ -78,8 +78,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.example.ui.dialogs.PdfPreviewDialog
+import com.example.ui.components.DriveBackupSection
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.viewmodel.FinanceViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -99,6 +102,7 @@ fun DocsScreen(
     val allowNegativeBalance by viewModel.allowNegativeBalanceState.collectAsState()
     val language by viewModel.languageState.collectAsState()
     val authState by viewModel.authState.collectAsState()
+    val driveBackupState by viewModel.driveBackupState.collectAsState()
 
     var showJsonExportDialog by remember { mutableStateOf<String?>(null) }
     var showJsonImportDialog by remember { mutableStateOf(false) }
@@ -236,6 +240,23 @@ fun DocsScreen(
                     )
                 }
             }
+        }
+
+        item {
+            DriveBackupSection(
+                state = driveBackupState,
+                onConnect = viewModel::connectDriveAccount,
+                onDisconnect = {
+                    viewModel.disconnectDriveAccount()
+                    GoogleSignIn.getClient(
+                        context,
+                        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+                    ).signOut()
+                },
+                onAutomaticChanged = viewModel::setAutomaticDriveBackup,
+                onBackupNow = viewModel::backupToDrive,
+                onRestore = viewModel::restoreFromDrive
+            )
         }
 
         // CARD 1: Reports & Data Backup (Consolidated with internal dividers)

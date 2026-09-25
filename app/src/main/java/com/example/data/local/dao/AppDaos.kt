@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
+    @Query("DELETE FROM users")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM users WHERE username = :username LIMIT 1")
     suspend fun getByUsername(username: String): User?
 
@@ -34,6 +37,9 @@ interface UserDao {
 
 @Dao
 interface AccountDao {
+    @Query("DELETE FROM accounts")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM accounts WHERE userId = :userId ORDER BY name ASC")
     fun getAllFlow(userId: String): Flow<List<Account>>
 
@@ -58,6 +64,9 @@ interface AccountDao {
 
 @Dao
 interface CategoryDao {
+    @Query("DELETE FROM categories")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM categories WHERE userId = :userId ORDER BY name ASC")
     fun getAllFlow(userId: String): Flow<List<Category>>
 
@@ -88,6 +97,9 @@ interface CategoryDao {
 
 @Dao
 interface TransactionDao {
+    @Query("DELETE FROM transactions")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM transactions WHERE userId = :userId ORDER BY date DESC, createdAt DESC")
     fun getAllFlow(userId: String): Flow<List<TransactionEntity>>
 
@@ -130,6 +142,9 @@ interface TransactionDao {
 
 @Dao
 interface LoanDao {
+    @Query("DELETE FROM loans")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM loans WHERE userId = :userId ORDER BY createdAt DESC")
     fun getAllFlow(userId: String): Flow<List<Loan>>
 
@@ -157,6 +172,9 @@ interface LoanDao {
 
 @Dao
 interface LoanInterestDao {
+    @Query("DELETE FROM loan_interests")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM loan_interests WHERE loanId = :loanId ORDER BY date DESC")
     fun getByLoanIdFlow(loanId: String): Flow<List<LoanInterest>>
 
@@ -175,6 +193,9 @@ interface LoanInterestDao {
 
 @Dao
 interface BudgetDao {
+    @Query("DELETE FROM budgets")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM budgets WHERE userId = :userId")
     fun getAllFlow(userId: String): Flow<List<Budget>>
 
@@ -196,6 +217,9 @@ interface BudgetDao {
 
 @Dao
 interface WishlistDao {
+    @Query("DELETE FROM wishlist_items")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM wishlist_items WHERE userId = :userId ORDER BY createdAt DESC")
     fun getAllFlow(userId: String): Flow<List<WishlistItem>>
 
@@ -220,6 +244,9 @@ interface WishlistDao {
 
 @Dao
 interface JournalDao {
+    @Query("DELETE FROM journal_entries")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM journal_entries WHERE userId = :userId ORDER BY date DESC, time DESC, createdAt DESC")
     fun getAllFlow(userId: String): Flow<List<JournalEntry>>
 

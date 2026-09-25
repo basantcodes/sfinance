@@ -24,6 +24,11 @@ import com.example.data.repository.DashboardData
 import com.example.data.repository.FinanceRepository
 import com.example.data.repository.WishlistItemWithAffordability
 import com.example.data.security.PreferenceManager
+import com.example.data.backup.BackupManager
+import com.example.data.backup.BackupPreferences
+import com.example.data.backup.DriveBackupClient
+import com.example.data.backup.DriveBackupWorker
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.example.util.PdfExporter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,10 +53,29 @@ data class AuthUiState(
     val error: String? = null
 )
 
+data class DriveBackupUiState(
+    val accountName: String? = null,
+    val automaticEnabled: Boolean = false,
+    val lastSuccessfulBackup: Long = 0L,
+    val availableBackup: com.example.data.backup.BackupSummary? = null,
+    val isBusy: Boolean = false,
+    val message: String? = null
+)
+
 class FinanceViewModel(application: Application) : AndroidViewModel(application) {
     val database = AppDatabase.getDatabase(application)
     val preferenceManager = PreferenceManager(application)
     val repository = FinanceRepository(database, preferenceManager)
+    private val backupPreferences = BackupPreferences(application)
+    private val backupManager = BackupManager(application, database, repository)
+    private val _driveBackupState = MutableStateFlow(
+        DriveBackupUiState(
+            accountName = backupPreferences.connectedAccount,
+            automaticEnabled = backupPreferences.automaticEnabled,
+            lastSuccessfulBackup = backupPreferences.lastSuccessfulBackup
+        )
+    )
+    val driveBackupState: StateFlow<DriveBackupUiState> = _driveBackupState.asStateFlow()
 
     private val accountFeatureViewModel = AccountFeatureViewModel(application, repository) { msg ->
         viewModelScope.launch { _uiEvent.emit(msg) }
@@ -549,6 +573,72 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun setAllowNegativeBalance(allow: Boolean) {
         viewModelScope.launch {
             authSettingsExportFeatureViewModel.setAllowNegativeBalance(allow)
+        }
+    }
+
+    fun connectDriveAccount(account: GoogleSignInAccount) {
+        backupPreferences.connectedAccount = account.email ?: account.displayName
+        _driveBackupState.value = _driveBackupState.value.copy(accountName = backupPreferences.connectedAccount, message = null)
+        viewModelScope.launch {
+            runCatching {
+                DriveBackupClient(getApplication()).download(account)?.let { backupManager.readSummary(it) }
+            }.onSuccess { summary ->
+                _driveBackupState.value = _driveBackupState.value.copy(availableBackup = summary)
+            }
+        }
+    }
+
+    fun disconnectDriveAccount() {
+        backupPreferences.clearConnection()
+        DriveBackupWorker.cancel(getApplication())
+        _driveBackupState.value = DriveBackupUiState()
+    }
+
+    fun setAutomaticDriveBackup(enabled: Boolean) {
+        backupPreferences.automaticEnabled = enabled
+        if (enabled) DriveBackupWorker.schedule(getApplication()) else DriveBackupWorker.cancel(getApplication())
+        _driveBackupState.value = _driveBackupState.value.copy(automaticEnabled = enabled)
+    }
+
+    fun backupToDrive(account: GoogleSignInAccount, passphrase: String) {
+        val userId = _authState.value.currentUser?.id ?: return
+        viewModelScope.launch {
+            _driveBackupState.value = _driveBackupState.value.copy(isBusy = true, message = null)
+            runCatching {
+                backupPreferences.passphrase = passphrase
+                val contentHash = backupManager.contentHash(userId)
+                DriveBackupClient(getApplication()).upload(account, backupManager.createEncryptedBackup(userId, passphrase))
+                backupPreferences.lastContentHash = contentHash
+                backupPreferences.lastSuccessfulBackup = System.currentTimeMillis()
+            }.onSuccess {
+                _driveBackupState.value = _driveBackupState.value.copy(
+                    isBusy = false,
+                    lastSuccessfulBackup = backupPreferences.lastSuccessfulBackup,
+                    message = "success"
+                )
+            }.onFailure { error ->
+                _driveBackupState.value = _driveBackupState.value.copy(isBusy = false, message = error.message ?: "failed")
+            }
+        }
+    }
+
+    fun restoreFromDrive(account: GoogleSignInAccount, passphrase: String) {
+        val userId = _authState.value.currentUser?.id ?: return
+        viewModelScope.launch {
+            _driveBackupState.value = _driveBackupState.value.copy(isBusy = true, message = null)
+            runCatching {
+                val bytes = requireNotNull(DriveBackupClient(getApplication()).download(account)) { "No backup found" }
+                backupManager.restoreEncryptedBackup(userId, bytes, passphrase)
+            }.onSuccess {
+                backupPreferences.passphrase = passphrase
+                backupPreferences.lastContentHash = backupManager.contentHash(userId)
+                _driveBackupState.value = _driveBackupState.value.copy(isBusy = false, message = "restored")
+                refreshAllData(userId)
+                refreshDashboard(userId)
+                refreshWishlist(userId)
+            }.onFailure { error ->
+                _driveBackupState.value = _driveBackupState.value.copy(isBusy = false, message = error.message ?: "failed")
+            }
         }
     }
 

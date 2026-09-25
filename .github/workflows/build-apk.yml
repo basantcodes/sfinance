@@ -56,6 +56,11 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ "$GRADLE_CMD" = "./gradlew" ]; then
+            ./gradlew testDebugUnitTest
+          else
+            gradle testDebugUnitTest
+          fi
+          if [ "$GRADLE_CMD" = "./gradlew" ]; then
             ./gradlew assembleRelease -PversionCode="$((GITHUB_RUN_NUMBER + 1))" -PversionName="1.0.${GITHUB_RUN_NUMBER}"
           else
             gradle assembleRelease -PversionCode="$((GITHUB_RUN_NUMBER + 1))" -PversionName="1.0.${GITHUB_RUN_NUMBER}"
